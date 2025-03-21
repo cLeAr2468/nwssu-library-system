@@ -2,7 +2,7 @@ import React from 'react'
 import { Badge } from "@/components/ui/badge"
 export default function howitworks() {
   return (
-    <section id="how-it-works" className="w-full py-12 md:py-10 lg:py-10 xl:py-10">
+    <section id="how-it-works" className="w-full py-12 md:py-12 lg:py-14 xl:py-16">
           <div className="container px-4 md:px-6">
             <div className="flex flex-col items-center justify-center space-y-4 text-center">
               <div className="space-y-2">

@@ -5,7 +5,7 @@ import { BookOpen, Search, Clock, BarChart3, Bell, Users} from "lucide-react"
 export default function features() {
   return (
     
-    <section id="features" className="w-full py-12 md:py-10 lg:py-10 xl:py-10 bg-muted/40">
+    <section id="features" className="w-full py-12 md:py-12 lg:py-12 xl:py-14 bg-muted/40">
     <div className="container px-4 md:px-6">
       <div className="flex flex-col items-center justify-center space-y-4 text-center">
         <div className="space-y-2">
