@@ -1,0 +1,47 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /nwssu-library-system/
+
+    # Allow direct access to actual files and directories
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+
+    # URL Rewriting Rules
+    RewriteRule ^register/?$ student/register.php [L,QSA]
+    RewriteRule ^login/?$ student/stud_login.php [L,QSA]
+    RewriteRule ^home/?$ student/home.php [L,QSA]
+    RewriteRule ^catalogs/?$ student/studbooks_display.php [L,QSA]
+    RewriteRule ^books/?$ student/studbook_detail.php [L,QSA]
+    RewriteRule ^topcollection/?$ student/topcollect.php [L,QSA]
+    RewriteRule ^newcollection/?$ student/newcollect.php [L,QSA]
+    RewriteRule ^missionvission/?$ student/Mission_VIsion.php [L,QSA]
+    RewriteRule ^allcategories/?$ student/category_books.php [L,QSA]
+
+
+    RewriteRule ^activity_logs/([^/]+)/?$ student/activity_logs.php?category=$1 [L,QSA]
+    RewriteRule ^activity_logs/?$ student/activity_logger.php [L,QSA]
+
+    RewriteRule ^track_click/([^/]+)/?$ student/track_click.php?category=$1 [L,QSA]
+    RewriteRule ^track_click/?$ student/track_click.php [L,QSA]
+    # Category URL rewriting
+    RewriteRule ^category/([^/]+)/?$ student/search_categ.php?category=$1 [L,QSA]
+    RewriteRule ^searchcategory/?$ student/search_categ.php [L,QSA]
+    
+    # Author URL rewriting
+    RewriteRule ^allauthor/?$ student/author.php [L,QSA]
+    RewriteRule ^author/([^/]+)/?$ student/selected_author.php?author=$1 [L,QSA]
+    RewriteRule ^author/?$ student/selected_author.php [L,QSA]
+
+    # Publisher URL rewriting
+    RewriteRule ^publisher/([^/]+)/?$ student/publisher_browse.php?publisher=$1 [L,QSA]
+    RewriteRule ^allpublisher/?$ student/publisher.php [L,QSA]
+    RewriteRule ^publisher/?$ student/publisher_browse.php [L,QSA]
+
+    RewriteRule ^profile/?$ student/profile.php [L,QSA]
+    RewriteRule ^reserved/?$ student/my_reservebooks.php [L,QSA]
+    RewriteRule ^borrowed/?$ student/my_borrowed.php [L,QSA]
+
+    # Prevent direct access to PHP files in student folder
+    RewriteCond %{THE_REQUEST} ^[A-Z]{3,}\s/student/.*\.php [NC]
+    RewriteRule ^ - [F]
+</IfModule>
