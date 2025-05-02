@@ -1,4 +1,4 @@
-    <?php
+<?php
     session_start(); // Start the session
     include '../component-library/connect.php'; // Ensure this file initializes $conn
     include '../student/side_navbars.php';
@@ -217,7 +217,9 @@
                                             </td>
                                             <td class="px-4 py-4">
                                                 <div class="space-y-1">
-                                                    <a href="./books ?id=<?php echo urlencode($book['id']); ?>" class="text-[#156295] hover:text-blue-800 hover:underline font-medium">
+                                                    <a href="./books?id=<?php echo urlencode($book['id']); ?>" 
+                                                       class="text-[#156295] hover:text-blue-800 hover:underline font-medium book-link"
+                                                       data-title="<?php echo htmlspecialchars($book['title']); ?>">
                                                         <?php echo htmlspecialchars($book['title']); ?>
                                                     </a>
                                                     <div class="text-xs text-gray-500">
@@ -397,8 +399,9 @@
                                         <div class="ml-4 flex-1">
                                             <div class="flex flex-col h-full">
                                                 <div>
-                                                    <a href="./books ?id=<?php echo urlencode($book['id']); ?>"
-                                                        class="text-base font-semibold text-[#156295] hover:text-primary line-clamp-2">
+                                                    <a href="./books?id=<?php echo urlencode($book['id']); ?>"
+                                                        class="text-base font-semibold text-[#156295] hover:text-primary line-clamp-2 book-link"
+                                                        data-title="<?php echo htmlspecialchars($book['title']); ?>">
                                                         <?php echo htmlspecialchars($book['title']); ?>
                                                     </a>
                                                     <p class="mt-1 text-sm text-gray-600">
@@ -440,7 +443,8 @@
                                         </div>
                                         <div class="flex gap-2">
                                             <a href="./books?id=<?php echo urlencode($book['id']); ?>"
-                                                class="text-xs bg-primary text-white px-3 py-1.5 rounded-full hover:bg-primary-hover transition-colors">
+                                                class="text-xs bg-primary text-white px-3 py-1.5 rounded-full hover:bg-primary-hover transition-colors book-link"
+                                                data-title="<?php echo htmlspecialchars($book['title']); ?>">
                                                 View Details
                                             </a>
                                             <?php if ($book['status'] === 'available'): ?>
@@ -694,6 +698,23 @@
                                     });
                                 });
                             }
+                        });
+                    });
+                });
+
+                // Add event listeners for book links
+                document.querySelectorAll('.book-link').forEach(link => {
+                    link.addEventListener('click', function(e) {
+                        const bookTitle = this.dataset.title;
+                        const formData = new FormData();
+                        formData.append('activity_detail', bookTitle);
+                        
+                        fetch('./student/record_activity.php', {
+                            method: 'POST',
+                            body: formData
+                        })
+                        .catch(error => {
+                            console.error('Error recording activity:', error);
                         });
                     });
                 });

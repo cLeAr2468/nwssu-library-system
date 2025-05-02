@@ -11,9 +11,9 @@ if (!function_exists('logActivity')) {
             $current_date = date('Y-m-d H:i:s');
             
             // Prepare the insert statement
-            $stmt = $conn->prepare("INSERT INTO activities (user_id, activity_type, activity_details, activity_date, status) 
+          
+              $stmt = $conn->prepare("INSERT INTO activities (user_id, activity_type, activity_details, activity_date, status) 
                                    VALUES (?, ?, ?, ?, 'active')");
-            
             // Execute the statement with the parameters
             $stmt->execute([$user_id, $activity_type, $activity_details, $current_date]);
             
@@ -67,33 +67,6 @@ if (!function_exists('logNavigationClick')) {
                 break;
             case 'newcollection':
                 $activity_details = 'User accessed New Collections page';
-                break;
-            case 'about_menu':
-                $activity_details = 'User accessed About menu';
-                break;
-            case 'mission_vision':
-                $activity_details = 'User accessed Mission & Vision page';
-                break;
-            case 'online_services':
-                $activity_details = 'User accessed Online Services menu';
-                break;
-            case 'proquest':
-                $activity_details = 'User accessed Proquest Central Database';
-                break;
-            case 'ejournals':
-                $activity_details = 'User accessed Philippine E-Journals';
-                break;
-            case 'starbooks':
-                $activity_details = 'User accessed DOST Starbooks';
-                break;
-            case 'ask_librarian':
-                $activity_details = 'User accessed Ask a Librarian menu';
-                break;
-            case 'email_librarian':
-                $activity_details = 'User accessed Email Account for Librarian';
-                break;
-            case 'messenger_librarian':
-                $activity_details = 'User accessed Messenger for Librarian';
                 break;
             default:
                 $activity_details = "User accessed $page_name page";

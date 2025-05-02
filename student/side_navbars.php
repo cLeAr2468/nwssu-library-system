@@ -192,7 +192,7 @@ if (isset($_POST['logout'])) {
                                 About <i class="fas fa-chevron-down ml-1 text-xs"></i>
                             </a>
                             <ul class="absolute left-0 mt-0 w-48 bg-white shadow-lg py-1 z-10 hidden group-hover:block">
-                                <li><a href="./missionvission" class="block px-4 py-2 hover:bg-blue-500 hover:text-white transition text-black" onclick="logNavigation('mission_vision')">Mission & Vision</a></li>
+                                <li><a href="./missionvission" class="block px-4 py-2 hover:bg-blue-500 hover:text-white transition text-black">Mission & Vision</a></li>
                             </ul>
                         </li>
                         <li class="relative group">
@@ -200,9 +200,9 @@ if (isset($_POST['logout'])) {
                                 Online Services <i class="fas fa-chevron-down ml-1 text-xs"></i>
                             </a>
                             <ul class="absolute left-0 mt-0 w-48 bg-white text-black shadow-lg py-1 z-10 hidden group-hover:block">
-                                <li><a href="https://www.proquest.com/" target="_blank" class="block px-4 py-2 hover:bg-blue-500 hover:text-white transition" onclick="logNavigation('proquest')">Proquest Central Database</a></li>
-                                <li><a href="https://ejournals.ph/" target="_blank" class="block px-4 py-2 hover:bg-blue-500 hover:text-white transition" onclick="logNavigation('ejournals')">Philippine E-Journals</a></li>
-                                <li><a href="https://starbooks.ph/" target="_blank" class="block px-4 py-2 hover:bg-blue-500 hover:text-white transition" onclick="logNavigation('starbooks')">Dost Starbooks</a></li>
+                                <li><a href="https://www.proquest.com/" target="_blank" class="block px-4 py-2 hover:bg-blue-500 hover:text-white transition">Proquest Central Database</a></li>
+                                <li><a href="https://ejournals.ph/" target="_blank" class="block px-4 py-2 hover:bg-blue-500 hover:text-white transition">Philippine E-Journals</a></li>
+                                <li><a href="https://starbooks.ph/" target="_blank" class="block px-4 py-2 hover:bg-blue-500 hover:text-white transition">Dost Starbooks</a></li>
                             </ul>
                         </li>
                         <li class="relative group">

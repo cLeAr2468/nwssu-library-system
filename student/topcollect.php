@@ -131,7 +131,8 @@ $profile_image = $student['images'] ?? '../images/prof.jpg'; // Fallback if no i
                                         </td>
                                         <td class="px-6 py-4">
                                             <div class="text-sm">
-                                                <a href="studbook_detail.php?id=<?php echo urlencode($book['id']); ?>" class="text-[#156295] hover:text-blue-800 hover:underline font-medium">
+                                                <a href="./books?id=<?php echo urlencode($book['id']); ?>" class="text-[#156295] hover:text-blue-800 hover:underline font-medium book-link"
+                                                    data-title="<?php echo htmlspecialchars($book['title']); ?>">
                                                     <?php echo htmlspecialchars($book['title']); ?>
                                                 </a>
                                                 <div class="text-gray-500 text-xs mt-1">
@@ -142,12 +143,12 @@ $profile_image = $student['images'] ?? '../images/prof.jpg'; // Fallback if no i
                                             </div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
-                                            <a href="selected_author.php?author=<?php echo urlencode($book['author']); ?>" class="text-blue-800 hover:text-blue-800 text-sm">
+                                            <a href="./author?author=<?php echo urlencode($book['author']); ?>" class="text-blue-800 hover:text-blue-800 text-sm">
                                                 <?php echo htmlspecialchars($book['author']); ?>
                                             </a>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
-                                            <a href="publisher_browse.php?publisher=<?php echo urlencode($book['publisher']); ?>" class="text-blue-800 hover:text-blue-800 text-sm">
+                                            <a href="./publisher?publisher=<?php echo urlencode($book['publisher']); ?>" class="text-blue-800 hover:text-blue-800 text-sm">
                                                 <?php echo htmlspecialchars($book['publisher']); ?>
                                             </a>
                                         </td>
@@ -210,7 +211,8 @@ $profile_image = $student['images'] ?? '../images/prof.jpg'; // Fallback if no i
                                                 <div class="flex flex-col h-full">
                                                     <div>
                                                         <a href="./books ?id=<?php echo urlencode($book['id']); ?>"
-                                                            class="text-base font-semibold text-[#156295] hover:text-primary line-clamp-2">
+                                                            class="text-base font-semibold text-[#156295] hover:text-primary line-clamp-2 book-link"
+                                                            data-title="<?php echo htmlspecialchars($book['title']); ?>">
                                                             <?php echo htmlspecialchars($book['title']); ?>
                                                         </a>
                                                         <p class="mt-1 text-sm text-gray-600">
@@ -252,7 +254,8 @@ $profile_image = $student['images'] ?? '../images/prof.jpg'; // Fallback if no i
                                             </div>
                                             <div class="flex gap-2">
                                                 <a href="./books?id=<?php echo urlencode($book['id']); ?>"
-                                                    class="text-xs bg-primary text-white px-3 py-1.5 rounded-full hover:bg-primary-hover transition-colors">
+                                                    class="text-xs bg-primary text-white px-3 py-1.5 rounded-full hover:bg-primary-hover transition-colors book-link"
+                                                    data-title="<?php echo htmlspecialchars($book['title']); ?>">
                                                     View Details
                                                 </a>
                                             </div>
@@ -290,6 +293,22 @@ $profile_image = $student['images'] ?? '../images/prof.jpg'; // Fallback if no i
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        // Add event listeners for book links
+        document.querySelectorAll('.book-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                const bookTitle = this.dataset.title;
+                const formData = new FormData();
+                formData.append('activity_detail', bookTitle);
+
+                fetch('./student/record_activity.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .catch(error => {
+                        console.error('Error recording activity:', error);
+                    });
+            });
+        });
     </script>
 </body>
 
