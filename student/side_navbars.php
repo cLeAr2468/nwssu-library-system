@@ -300,7 +300,7 @@ if (isset($_POST['logout'])) {
                         </div>
                         <div class="mb-4">
                             <label for="email" class="block text-sm font-medium">Email</label>
-                            <input type="email" class="w-full p-2 border rounded-lg" id="email" name="email" value="<?php echo htmlspecialchars($student['email']); ?>" required>
+                            <input type="email" class="w-full p-2 border rounded-lg bg-gray-100" id="email" name="email" value="<?php echo htmlspecialchars($student['email']); ?>" readonly>
                         </div>
                         <div class="mb-4">
                             <label for="address" class="block text-sm font-medium">Address</label>

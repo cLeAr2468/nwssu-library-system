@@ -1,202 +1,196 @@
 <?php
-session_start();
-if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
-    header('Location: ../admin_panel/index.php'); // Adjust the path to your login page
-    exit();
-}
 
-define('BOOKS_PER_PAGE', 10); // Define the number of books per page
-
+define('BOOKS_PER_PAGE', 10);
 include '../component-library/connect.php';
-// Database connection
 try {
     $conn = new PDO("mysql:host=$db_host;dbname=$db_name", $user_name, $user_password);
     // Set PDO error mode to exception
-    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION); 
+    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch (PDOException $e) {
-    die('Connection failed: ' . htmlspecialchars($e->getMessage()));
+    die("Connection failed: " . $e->getMessage());
 }
-
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $offset = ($page - 1) * BOOKS_PER_PAGE;
-
 // Get the selected category from URL parameter
 $selected_category = isset($_GET['category']) ? $_GET['category'] : '';
-$selected_category = htmlspecialchars($selected_category); // Validate category to prevent SQL injection
-
-// Initialize books array
-$books = [];
-$total_pages = 0;
-
+// Validate category to prevent SQL injection
+$selected_category = htmlspecialchars($selected_category);
 // Fetch books data based on selected category with sorting and pagination
-if (!empty($selected_category)) {
-    $query = $conn->prepare("SELECT * FROM books WHERE category = :category ORDER BY books_title ASC LIMIT :offset, :limit");
-    $query->bindValue(':category', $selected_category, PDO::PARAM_STR);
-    $query->bindValue(':offset', $offset, PDO::PARAM_INT);
-    $query->bindValue(':limit', BOOKS_PER_PAGE, PDO::PARAM_INT);
-    $query->execute();
-    $books = $query->fetchAll(PDO::FETCH_ASSOC);
-
-    // Fetch total number of books for pagination calculation
-    $total_books_query = $conn->prepare("SELECT COUNT(*) FROM books WHERE category = :category");
-    $total_books_query->bindValue(':category', $selected_category, PDO::PARAM_STR);
-    $total_books_query->execute();
-    $total_books = $total_books_query->fetchColumn();
-    $total_pages = ceil($total_books / BOOKS_PER_PAGE);
-}
-
+$query = $conn->prepare("SELECT * FROM books WHERE category = :category ORDER BY title ASC LIMIT :offset, :limit");
+$query->bindValue(':category', $selected_category, PDO::PARAM_STR);
+$query->bindValue(':offset', $offset, PDO::PARAM_INT);
+$query->bindValue(':limit', BOOKS_PER_PAGE, PDO::PARAM_INT);
+$query->execute();
+$books = $query->fetchAll(PDO::FETCH_ASSOC);
+// Fetch total number of books for pagination calculation
+$total_books_query = $conn->prepare("SELECT COUNT(*) FROM books WHERE category = :category");
+$total_books_query->bindValue(':category', $selected_category, PDO::PARAM_STR);
+$total_books_query->execute();
+$total_books = $total_books_query->fetchColumn();
+$total_pages = ceil($total_books / BOOKS_PER_PAGE);
 // Fetch distinct categories for display
 $categories_query = $conn->query("SELECT DISTINCT category FROM books");
 $categories = $categories_query->fetchAll(PDO::FETCH_COLUMN);
-
-// Check if the logout button is clicked
-if (isset($_POST['logout'])) {
-    unset($_SESSION['user_id']);
-    unset($_SESSION['user_name']);
-    header('Location: student_login.php');
-    exit();
-}
-
-include '../admin_panel/sidebar_nav.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Categories</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="../admin_style/design.css">
-    <link rel="stylesheet" href="../admin_style/style.css">
+    <title>Books in <?php echo htmlspecialchars($selected_category); ?></title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
 </head>
-<style>
-    .selected-category {
-        color: #156295;
-    }
-
-    .book-image-container {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 110px;
-        padding: 100px 0;
-        margin-bottom: 5%;
-        margin-top: 5%;
-    }
-</style>
-<body>
-<div class="main p-2">
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-md-10 fw-bold fs-3">
-                <p><span>Dashboard</span></p>
+<body class="bg-gray-50">
+    <?php include '../admin_panel/side_nav.php'; ?>
+    <div class="ml-64 min-h-screen p-8 mt-[4%]">
+        <!-- Header Section -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between">
+                <h1 class="text-2xl font-bold text-gray-900">
+                    <?php echo htmlspecialchars($selected_category); ?> Books
+                </h1>
+                <a href="categories.php" class="flex items-center text-blue-600 hover:text-blue-800">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                    </svg>
+                    Back to Categories
+                </a>
             </div>
         </div>
-    </div>
-    <div class="container mt-5">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <h2 class="card-title">Search</h2>
+
+        <!-- Search Section -->
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="relative w-full md:w-96">
+                    <input type="text" id="searchInput" 
+                        onkeyup="searchBooks()"
+                        class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Search books...">
+                    <svg class="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
                 </div>
-                <?php if ($selected_category): ?>
-                    <div class="book-title selected-category d-flex justify-content-between align-items-center mb-1">
-                        <span>
-                            Selected Category: <strong><?php echo htmlspecialchars($selected_category); ?></strong> [ <a href="categories.php">All</a> ]
-                        </span>
-                        <div class="search-input-wrapper">
-                            <i class="bi bi-search position-absolute" style="left: 15px; top: 50%; transform: translateY(-50%);"></i>
-                            <input type="text" id="searchInput" placeholder="Search Book" class="form-control control rounded-pill ps-5" onkeyup="searchBooks()" style="width: 300px;">
-                        </div>
-                    </div>
-                <?php endif; ?>
-                <table class="table table-bordered mt-3">
-                    <thead class="thead-light">
-                        <tr>
-                            <th></th> <!-- Empty header for book image column -->
-                            <th>Title</th>
-                            <th>Authors/Editors</th>
-                            <th>Publisher</th>
-                            <th>Status</th>
-                            <th>Copies</th>
+                <div class="text-sm text-gray-500">
+                    Total Books: <span class="font-medium text-gray-900"><?php echo $total_books; ?></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Books Table -->
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200" id="booksTable">
+                    <thead>
+                        <tr class="bg-primary-600">
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Book Cover</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Title</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Author</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Publisher</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Status</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Copies</th>
                         </tr>
                     </thead>
-                    <tbody id="booksTableBody">
-                        <?php if (empty($books)): ?>
-                            <tr>
-                                <td colspan="6" class="text-center">No books found</td>
-                            </tr>
-                        <?php else: ?>
-                            <?php foreach ($books as $book): ?>
-                                <tr>
-                                    <td class="text-center book-image-container">
-                                        <?php if (!empty($book['books_image'])): ?>
-                                            <img src="../uploaded_file/<?php echo htmlspecialchars($book['books_image']); ?>" alt="Book Cover" class="img-thumbnail" style="width: 80px; height: 110px;">
-                                        <?php else: ?>
-                                            <div style="width: 80px; height: 110px; background-color: rgba(232, 232, 232, 0.65); display: flex; align-items: center; justify-content: center; color: #555;">
-                                                Missing Cover Photo
-                                            </div>
-                                        <?php endif; ?>
-                                    </td>
-                                    <td>
-                                        <div class="book-info">
-                                            <div>
-                                                <a href="books_detail.php?call_no=<?php echo urlencode($book['call_no']); ?>" class="book-title">
-                                                    <?php echo htmlspecialchars($book['books_title']); ?>
-                                                </a><br>
-                                                <small>Publish Date: <?php echo htmlspecialchars($book['publish_date']); ?></small><br>
-                                                <small>ISBN: <?php echo htmlspecialchars($book['ISBN']); ?></small><br>
-                                                <small>Call No: <?php echo htmlspecialchars($book['call_no']); ?></small>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="book-info">
-                                        <a href="selected_author.php?author=<?php echo urlencode($book['author']); ?>" class="books-link">
-                                            <?php echo htmlspecialchars($book['author']); ?>
-                                        </a>
-                                    </td>
-                                    <td class="book-info">
-                                        <a href="publisher_browse.php?publisher=<?php echo urlencode($book['publisher']); ?>" class="books-link">
-                                            <?php echo htmlspecialchars($book['publisher']); ?>
-                                        </a>
-                                    </td>
-                                    <td class="text-center"><?php echo htmlspecialchars($book['status']); ?></td>
-                                    <td class="text-center"><?php echo htmlspecialchars($book['copies']); ?></td>
-                                </tr>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <?php foreach ($books as $book): ?>
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <?php if (!empty($book['books_image'])): ?>
+                                    <img src="../uploaded_file/<?php echo htmlspecialchars($book['books_image']); ?>" 
+                                         alt="Book Cover" 
+                                         class="h-20 w-16 object-cover rounded">
+                                <?php else: ?>
+                                    <div class="h-20 w-16 bg-gray-100 flex items-center justify-center rounded">
+                                        <span class="text-gray-400 text-xs">No Image</span>
+                                    </div>
+                                <?php endif; ?>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="text-sm">
+                                    <a href="./books?id=<?php echo urlencode($book['id']); ?>" 
+                                       class="font-medium text-[#156295] font-bold hover:text-blue-800">
+                                        <?php echo htmlspecialchars($book['title']); ?>
+                                    </a>
+                                    <p class="text-gray-500 mt-1">ISBN: <?php echo htmlspecialchars($book['ISBN']); ?></p>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-900">
+                                <?php echo htmlspecialchars($book['author']); ?>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-900">
+                                <?php echo htmlspecialchars($book['publisher']); ?>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                    <?php echo $book['status'] === 'available' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'; ?>">
+                                    <?php echo htmlspecialchars($book['status']); ?>
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-900">
+                                <?php echo htmlspecialchars($book['copies']); ?>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
                     </tbody>
                 </table>
-                <nav aria-label="Page navigation">
-                    <ul class="pagination justify-content-center">
-                        <?php for ($i = 1; $i <= $total_pages; $i++): ?>
-                            <li class="page-item <?= ($i === $page) ? 'active' : ''; ?>">
-                                <a class="page-link" href="?page=<?= $i; ?>&category=<?php echo urlencode($selected_category); ?>"><?= $i; ?></a>
-                            </li>
-                        <?php endfor; ?>
-                    </ul>
-                </nav>
             </div>
         </div>
-    </div>   
-    <footer class="footer">
-        <div class="container text-center">
-            <span class="text-muted">© 2024 NwSSU Library. All rights reserved.</span>
+
+        <!-- Pagination -->
+        <?php if ($total_pages > 1): ?>
+        <div class="mt-6 flex justify-center">
+            <nav class="flex items-center gap-2">
+                <?php for ($i = 1; $i <= $total_pages; $i++): ?>
+                    <a href="?page=<?= $i; ?>&category=<?php echo urlencode($selected_category); ?>"
+                       class="<?= ($i === $page) ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'; ?> 
+                              px-4 py-2 text-sm font-medium rounded border border-gray-200">
+                        <?= $i; ?>
+                    </a>
+                <?php endfor; ?>
+            </nav>
         </div>
-    </footer>
-</div> 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
+        <?php endif; ?>
+    </div>
+
+    <script>
     function searchBooks() {
         const input = document.getElementById('searchInput').value.toLowerCase();
-        const rows = document.querySelectorAll('#booksTableBody tr');
-        rows.forEach(row => {
-            const title = row.cells[1].textContent.toLowerCase();
-            row.style.display = title.includes(input) ? '' : 'none';
-        });
+        const table = document.getElementById('booksTable');
+        const rows = table.getElementsByTagName('tr');
+
+        for (let i = 1; i < rows.length; i++) {
+            const titleCell = rows[i].getElementsByTagName('td')[1];
+            if (titleCell) {
+                const title = titleCell.textContent || titleCell.innerText;
+                if (title.toLowerCase().indexOf(input) > -1) {
+                    rows[i].style.display = '';
+                } else {
+                    rows[i].style.display = 'none';
+                }
+            }
+        }
     }
-</script>
+    </script>
 </body>
 </html>

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Apr 11, 2025 at 10:22 AM
+-- Generation Time: May 03, 2025 at 03:28 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -35,6 +35,23 @@ CREATE TABLE `activities` (
   `activity_date` varchar(250) NOT NULL,
   `status` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `activities`
+--
+
+INSERT INTO `activities` (`activity_id`, `user_id`, `activity_type`, `activity_details`, `activity_date`, `status`) VALUES
+(1, '21-SJ00126', 'click', 'User accessed top_collection page', '2025-05-02 16:34:20', 'active'),
+(2, '21-SJ00126', 'View Books', 'Domestic TOURISM', '2025-05-02 16:34:29', 'active'),
+(3, '21-SJ00126', 'View Books', 'Environmental Management', '2025-05-02 16:34:49', 'active'),
+(4, '21-SJ00126', 'View Books', 'The Philippines Recommends for Watershed Management', '2025-05-02 16:35:02', 'active'),
+(5, '21-SJ00126', 'View Books', 'The Philippines Recommends for Watershed Management', '2025-05-02 16:35:27', 'active'),
+(6, '21-SJ00126', 'View Books', 'MultiCultural management', '2025-05-02 16:35:41', 'active'),
+(7, '21-SJ00126', 'click', 'User accessed Book Catalog page', '2025-05-02 16:38:49', 'active'),
+(8, '21-SJ00126', 'View Books', 'TOURISM Planning and Development', '2025-05-02 16:54:18', 'active'),
+(9, '21-SJ00126', 'View Books', 'TOURISM Planning and Development', '2025-05-02 16:55:19', 'active'),
+(10, '21-SJ00126', 'click', 'User accessed Book Catalog page', '2025-05-02 16:58:11', 'active'),
+(11, '21-SJ00126', 'logout', 'User signed out of the system', '2025-05-02 17:03:18', 'active');
 
 -- --------------------------------------------------------
 
@@ -95,10 +112,10 @@ CREATE TABLE `books` (
 INSERT INTO `books` (`id`, `material_type`, `sub_type`, `category`, `title`, `author`, `publisher`, `status`, `subject`, `content`, `summary`, `issn`, `call_no`, `ISBN`, `copyright`, `page_number`, `edition`, `copies`, `date_acquired`, `books_image`, `catalog_date`) VALUES
 (1, 'Book', 'Others', 'BSF', 'MultiCultural management', 'FARID ELASHMAWI et al', 'National Book Store', 'available', 'Programming', 'aaaaa', 'aaaaa', '00000', '658 E37', '9831363825', '000000', 234, 'N/A', 3, '2025-03-27', NULL, '2025-04-02'),
 (2, 'Journal', 'Others', 'BSF', 'The Philippines Recommends for Watershed Management', 'Dr. Vicente P. Veracion et al', 'DOST', 'available', 'Animal Science, Agriculture', 'd', 'd', '1157787', '658 P364 1991', '9712001822', '00000', 88, 'N/A', 5, '2025-03-27', NULL, '2025-04-02'),
-(3, 'Book', 'Others', 'BSF', 'Environmental Management', 'Dr. Swapan C Deb', 'JAICO BOOKS', 'available', 'Animal Science, Agriculture', 'ds', 'ds', '000000', '658.4 D299 2003', '8179921344', '000000', 243, 'N/A', 1, '2025-03-27', NULL, '2025-04-08'),
+(3, 'Book', 'Others', 'BSF', 'Environmental Management', 'Dr. Swapan C Deb', 'JAICO BOOKS', 'available', 'Animal Science, Agriculture', 'ds', 'ds', '000000', '658.4 D299 2003', '8179921344', '000000', 243, 'N/A', 2, '2025-03-27', NULL, '2025-04-08'),
 (4, 'Book', 'Others', 'BSF', 'TOURISM Planning and Development', 'Zenaida Lansangan Cruz, Ph.D.', 'National Book Store', 'available', 'Animal Science, Agriculture', 's', 's', '00000', '790 O111 2011', '9710870424', '000000', 145, 'N/A', 1, '2025-03-27', NULL, '2025-04-02'),
 (5, 'Book', 'Others', 'BSF', 'Ornamental Horticulture and Landscape Gardening', 'Dr. Mahesh Kumar', 'RANDOM PUBLICATIONS LLP', 'available', 'Animal Science, Agriculture', 'a', 'a', '00000', '712 K95 2022', '9789393884527', '000000', 306, 'N/A', 4, '2025-03-27', NULL, '2025-04-02'),
-(10, 'Book', 'Others', 'BSF', 'Domestic TOURISM', 'Carlos M. Libosada, Jr.', 'ANVIL PIBLISHING, INC.', 'available', 'Animal Science, Agriculture', 's', 's', '00000', '790 L11 2003', '9712713989', '000000', 214, 'N/A', 1, '2025-03-27', '../uploaded_file/bgss.png', '2025-04-08'),
+(10, 'Book', 'Others', 'BSF', 'Domestic TOURISM', 'Carlos M. Libosada, Jr.', 'ANVIL PIBLISHING, INC.', 'available', 'Animal Science, Agriculture', 's', 's', '00000', '790 L11 2003', '9712713989', '000000', 214, 'N/A', 2, '2025-03-27', '../uploaded_file/bgss.png', '2025-04-08'),
 (11, 'E-Book', 'Fiction', 'BSA-Animal Science', 'the science', 'Carlos M. Libosada, Jr.', 'ANVIL PIBLISHING, INC.', 'available', 'Animal Science, Agriculture', 's', 's', '00000', '790 L11 2003', '0000', '00000', 276, 'N/A', 5, '2025-04-08', NULL, '2025-04-08'),
 (13, 'Unpublished Material', 'Thesis', 'BSIT', 'Pig Feeder', 'Mark Francis', 'Molleda Fam', 'available', 'Programming', 'de', 'da', '11111', '11111', '111111', '2025', 276, 'N/A', 1, '2025-04-25', '67f4f161f20f5_2.png', '2025-04-10');
 
@@ -123,7 +140,13 @@ CREATE TABLE `borrowed_books` (
 --
 
 INSERT INTO `borrowed_books` (`user_id`, `book_id`, `copies`, `status`, `return_sched`, `borrowed_date`, `fine`) VALUES
-('21-SJ00307', '10', 1, 'borrowed', '2025-04-24', '2025-04-10', NULL);
+('21-SJ00307', '10', 1, 'returned', '2025-04-24', '2025-04-10', NULL),
+('21-SJ00307', '10', 1, 'returned', '2025-04-25', '2025-04-11', NULL),
+('21-SJ00307', '3', 1, 'returned', '2025-05-01', '2025-04-17', NULL),
+('21-SJ00307', '10', 1, 'returned', '2025-05-01', '2025-04-17', NULL),
+('21-SJ00126', '10', 1, 'returned', '2025-05-01', '2025-04-17', NULL),
+('21-SJ00127', '2', 1, 'returned', '2025-05-01', '2025-04-17', NULL),
+('21-SJ00126', '10', 1, 'returned', '2025-05-15', '2025-05-01', NULL);
 
 -- --------------------------------------------------------
 
@@ -191,7 +214,10 @@ CREATE TABLE `reserve_books` (
 --
 
 INSERT INTO `reserve_books` (`user_id`, `book_id`, `reserved_date`, `status`, `copies`, `cancel_date`) VALUES
-('21-SJ00307', 3, '2025-04-10 19:12:49', 'reserved', 1, '');
+('21-SJ00307', 3, '2025-04-10 19:12:49', 'borrowed', 1, ''),
+('21-SJ00307', 10, '2025-04-11 19:00:16', 'borrowed', 1, NULL),
+('21-SJ00126', 10, '2025-04-13 14:09:01', 'borrowed', 1, NULL),
+('21-SJ00126', 10, '2025-05-01 14:01:20', 'borrowed', 1, NULL);
 
 -- --------------------------------------------------------
 
@@ -206,6 +232,19 @@ CREATE TABLE `return_books` (
   `status` varchar(50) NOT NULL,
   `return_date` varchar(250) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `return_books`
+--
+
+INSERT INTO `return_books` (`user_id`, `book_id`, `copies`, `status`, `return_date`) VALUES
+('21-SJ00307', 10, 1, 'returned', '2025-04-11'),
+('21-SJ00307', 10, 1, 'returned', '2025-04-11'),
+('21-SJ00307', 3, 1, 'returned', '2025-04-17'),
+('21-SJ00307', 10, 1, 'returned', '2025-04-17'),
+('21-SJ00126', 10, 1, 'returned', '2025-04-17'),
+('21-SJ00127', 2, 1, 'returned', '2025-04-17'),
+('21-SJ00126', 10, 1, 'returned', '2025-05-01');
 
 -- --------------------------------------------------------
 
@@ -257,6 +296,7 @@ CREATE TABLE `user_info` (
 --
 
 INSERT INTO `user_info` (`id`, `user_id`, `first_name`, `middle_name`, `last_name`, `patron_type`, `email`, `address`, `password`, `images`, `status`, `account_status`) VALUES
+(5, '21-SJ00', 'Mark', 'M.', 'Molleda', 'Student-BSIT', 'Mark@gmail.com', 'Tarangnan', '$2b$10$HPmMa6siJ/xiC04fXF5bcu.4mN1eC.MNwsm5pRRQIRbROc/w7Qfna', NULL, 'approved', 'active'),
 (6, '21-SJ00307', 'Jerald', 'Chavez', 'Reyes', 'student-BSCRIM', 'reyesjerald638@gmail.com', 'Inoraguiao Sta. Margarita Samar', '$2y$10$bd1pcMnsoXnQXMOU9VCp4.AaiOiMZbBHRCjqca/A9ohnbd8O3xegq', '67f8bfee894c8-bgs.png', 'approved', 'active'),
 (7, '21-SJ00126', 'Modesto Jr.', 'Velarde', 'Elizalde', 'student-BSIT', 'modestoelizalde1@gmail.com', 'Gandara', '$2y$10$Hm6PK3e3o6H5tJ/ofEb3X.NNnS3eVlT9uRvZRU.Io5lG5dgdAnDka', NULL, 'approved', 'active'),
 (8, '21-SJ00127', 'Mark Francis', 'Velarde', 'Molleda', 'student-BSIT', 'Mark@gmail.com', 'Tarangnan Samar', '$2y$10$Pjeu863jKTyZuC6suVvq4OcJACj8VlhxxyVUc4RES4IxkDn9Rw99C', NULL, 'approved', 'inactive');
@@ -309,7 +349,7 @@ ALTER TABLE `user_info`
 -- AUTO_INCREMENT for table `activities`
 --
 ALTER TABLE `activities`
-  MODIFY `activity_id` int(50) NOT NULL AUTO_INCREMENT;
+  MODIFY `activity_id` int(50) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT for table `announcement`

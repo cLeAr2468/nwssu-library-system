@@ -194,10 +194,15 @@ if (isset($data['action'])) {
                 $insertReturnQuery = "INSERT INTO return_books (user_id, book_id, copies, status, return_date) VALUES (?, ?, ?, 'returned', ?)";
                 $stmtInsertReturn = $conn->prepare($insertReturnQuery);
                 $stmtInsertReturn->execute([$userId, $bookId, $borrowedBook['copies'], $returnDate]);
-                // Delete the record from borrowed_books table
+                
+                // Update the status in borrowed_books table to 'returned'
                 $updateBorrowedQuery = "UPDATE borrowed_books SET status = 'returned' WHERE user_id = ? AND book_id = ?";
                 $stmtupdateBorrowed = $conn->prepare($updateBorrowedQuery);
                 $stmtupdateBorrowed->execute([$userId, $bookId]);
+                // Update the status in reserve_books table to 'returned'
+                $updateReserveQuery = "UPDATE reserve_books SET status = 'returned' WHERE user_id = ? AND book_id = ?";
+                $stmtUpdateReserve = $conn->prepare($updateReserveQuery);
+                $stmtUpdateReserve->execute([$userId, $bookId]);
                 // Update the status in books table to 'available' and increment copies
                 $updateBooksQuery = "UPDATE books SET status = 'available', copies = copies + ? WHERE id = ?";
                 $stmtUpdateBooks = $conn->prepare($updateBooksQuery);
@@ -210,7 +215,6 @@ if (isset($data['action'])) {
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
         exit; // Stop further execution for AJAX requests
-        
     }
 }
 ?>

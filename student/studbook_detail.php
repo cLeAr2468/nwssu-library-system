@@ -29,15 +29,55 @@ try {
                 logActivity($user_id, 'reservation', 'Reserved book: ' . $book['title']);
                 
                 if ($user_id) {
-                    // Check if the book is already reserved by the user
-                    $checkReservationSql = "SELECT * FROM reserve_books WHERE user_id = :user_id AND book_id = :book_id AND status = 'reserved'";
+                    // Check total number of active reservations and borrowed books
+                    $checkTotalBooksQuery = "SELECT 
+                        (SELECT COUNT(*) FROM reserve_books 
+                         WHERE user_id = :user_id AND status = 'reserved') +
+                        (SELECT COUNT(*) FROM borrowed_books 
+                         WHERE user_id = :user_id AND status = 'borrowed') as total_books";
+                    
+                    $checkTotalStmt = $conn->prepare($checkTotalBooksQuery);
+                    $checkTotalStmt->execute([':user_id' => $user_id]);
+                    $totalBooks = $checkTotalStmt->fetchColumn();
+
+                    if ($totalBooks >= 3) {
+                        echo json_encode([
+                            'success' => false, 
+                            'message' => 'You have reached the maximum limit of 3 books (reserved + borrowed).'
+                        ]);
+                        exit();
+                    }
+
+                    // Check if the book is already reserved by the user and not returned
+                    $checkReservationSql = "SELECT * FROM reserve_books 
+                                           WHERE user_id = :user_id 
+                                           AND book_id = :book_id 
+                                           AND status = 'reserved'";
                     $checkReservationStmt = $conn->prepare($checkReservationSql);
                     $checkReservationStmt->execute([':user_id' => $user_id, ':book_id' => $book_id]);
                     $existingReservation = $checkReservationStmt->fetch(PDO::FETCH_ASSOC);
+                    
                     if ($existingReservation) {
                         echo json_encode(['success' => false, 'message' => 'This book is already reserved in your account.']);
                         exit();
                     }
+
+                    // Check if the book was previously borrowed and returned
+                    $checkPreviousReservationSql = "SELECT * FROM reserve_books 
+                                                   WHERE user_id = :user_id 
+                                                   AND book_id = :book_id 
+                                                   ORDER BY reserved_date DESC 
+                                                   LIMIT 1";
+                    $checkPreviousReservationStmt = $conn->prepare($checkPreviousReservationSql);
+                    $checkPreviousReservationStmt->execute([':user_id' => $user_id, ':book_id' => $book_id]);
+                    $previousReservation = $checkPreviousReservationStmt->fetch(PDO::FETCH_ASSOC);
+
+                    // If there's a previous reservation and it's not returned, don't allow new reservation
+                    if ($previousReservation && $previousReservation['status'] !== 'returned') {
+                        echo json_encode(['success' => false, 'message' => 'Please return your previous reservation first.']);
+                        exit();
+                    }
+
                     // Check if the book is available
                     $checkSql = "SELECT copies, status FROM books WHERE id = :id";
                     $checkStmt = $conn->prepare($checkSql);
@@ -85,17 +125,23 @@ try {
     $book = null;
     $relatedBooks = [];
     $isReserved = false;
+    $isBorrowed = false;
     if ($book_id) {
         try {
             // Fetch the main book details
             $details = $conn->prepare("SELECT * FROM books WHERE id = :book_id");
             $details->execute([':book_id' => $book_id]);
             $book = $details->fetch(PDO::FETCH_ASSOC);
-            // Check if user has already reserved this book
+            // Check if user has an active (non-returned) reservation for this book
             if ($book && isset($user_id)) {
-                $checkReservation = $conn->prepare("SELECT * FROM reserve_books WHERE user_id = :user_id AND book_id = :book_id AND status = 'reserved'");
+                $checkReservation = $conn->prepare("SELECT * FROM reserve_books 
+                                                  WHERE user_id = :user_id 
+                                                  AND book_id = :book_id 
+                                                  AND (status = 'reserved' OR status = 'borrowed')");
                 $checkReservation->execute([':user_id' => $user_id, ':book_id' => $book_id]);
-                $isReserved = $checkReservation->rowCount() > 0;
+                $reservation = $checkReservation->fetch(PDO::FETCH_ASSOC);
+                $isReserved = !empty($reservation);
+                $isBorrowed = !empty($reservation) && $reservation['status'] === 'borrowed';
             }
             // Fetch related books
             if ($book) {
@@ -217,10 +263,18 @@ try {
                             </div>
                         <?php endif; ?>
                         <?php if ($book['status'] === 'available'): ?>
-                            <button class="reserve-btn bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-full transition duration-300 mt-2 <?php echo $isReserved ? 'opacity-50 cursor-not-allowed' : ''; ?>"
+                            <button class="reserve-btn bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-full transition duration-300 mt-2 <?php echo ($isReserved || $isBorrowed) ? 'opacity-50 cursor-not-allowed' : ''; ?>"
                                 data-book-id="<?php echo htmlspecialchars($book['id']); ?>"
-                                <?php echo $isReserved ? 'disabled' : ''; ?>>
-                                <?php echo $isReserved ? 'Reserved' : 'Reserve'; ?>
+                                <?php echo ($isReserved || $isBorrowed) ? 'disabled' : ''; ?>>
+                                <?php 
+                                    if ($isBorrowed) {
+                                        echo 'Borrowed';
+                                    } elseif ($isReserved) {
+                                        echo 'Reserved';
+                                    } else {
+                                        echo 'Reserve';
+                                    }
+                                ?>
                             </button>
                         <?php endif; ?>
                     </div>
@@ -401,10 +455,18 @@ try {
                 <div class="flex items-center justify-between">
                     <div class="flex space-x-2">
                         <?php if ($book['status'] === 'available'): ?>
-                            <button class="reserve-btn bg-blue-500 hover:bg-blue-600 text-white px-4 py-1.5 rounded-full text-sm font-medium transition duration-150 ease-in-out <?php echo $isReserved ? 'opacity-50 cursor-not-allowed' : ''; ?>"
+                            <button class="reserve-btn bg-blue-500 hover:bg-blue-600 text-white px-4 py-1.5 rounded-full text-sm font-medium transition duration-150 ease-in-out <?php echo ($isReserved || $isBorrowed) ? 'opacity-50 cursor-not-allowed' : ''; ?>"
                                 data-book-id="<?php echo htmlspecialchars($book['id']); ?>"
-                                <?php echo $isReserved ? 'disabled' : ''; ?>>
-                                <?php echo $isReserved ? 'Reserved' : 'Reserve Book'; ?>
+                                <?php echo ($isReserved || $isBorrowed) ? 'disabled' : ''; ?>>
+                                <?php 
+                                    if ($isBorrowed) {
+                                        echo 'Borrowed';
+                                    } elseif ($isReserved) {
+                                        echo 'Reserved';
+                                    } else {
+                                        echo 'Reserve Book';
+                                    }
+                                ?>
                             </button>
                         <?php endif; ?>
                     </div>

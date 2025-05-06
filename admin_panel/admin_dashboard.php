@@ -69,11 +69,6 @@ include '../admin_panel/side_nav.php';
                     <h1 class="text-2xl font-bold text-gray-800">Dashboard Overview</h1>
                     <p class="text-gray-600">Welcome back, Administrator</p>
                 </div>
-                <div class="mt-4 md:mt-0">
-                    <button id="addAnnouncementBtn" class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg transition duration-200 flex items-center">
-                        <i class="lni lni-plus mr-2"></i> Add Announcement
-                    </button>
-                </div>
             </div>
 
             <!-- Stats Cards -->
@@ -216,18 +211,62 @@ include '../admin_panel/side_nav.php';
                 </a>
             </div>
 
-            <!-- Charts Section -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                <!-- Borrowing Trends Chart -->
-                <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Borrowing Trends</h3>
-                    <canvas id="borrowingTrendsChart" height="300"></canvas>
+            <!-- Announcements Section -->
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 mb-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800">Recent Announcements</h3>
+                    <button id="addAnnouncementBtn" class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg transition duration-200 flex items-center">
+                        <i class="lni lni-plus mr-2"></i> Add Announcement
+                    </button>
                 </div>
-
-                <!-- Book Categories Distribution -->
-                <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Book Categories Distribution</h3>
-                    <canvas id="categoriesChart" height="300"></canvas>
+                <div class="space-y-4">
+                    <?php if (!empty($announcements)): ?>
+                        <?php foreach ($announcements as $announcement): ?>
+                            <div class="border border-gray-200 rounded-lg p-4 relative">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <h4 class="font-semibold text-gray-800"><?= htmlspecialchars($announcement['title']) ?></h4>
+                                        <p class="text-sm text-gray-500 mt-1">
+                                            <?php
+                                            $post_time = new DateTime($announcement['date']);
+                                            $now = new DateTime();
+                                            $interval = $post_time->diff($now);
+                                            if ($interval->y > 0) {
+                                                echo $interval->y . ' year' . ($interval->y > 1 ? 's' : '') . ' ago';
+                                            } elseif ($interval->m > 0) {
+                                                echo $interval->m . ' month' . ($interval->m > 1 ? 's' : '') . ' ago';
+                                            } elseif ($interval->d > 0) {
+                                                echo $interval->d . ' day' . ($interval->d > 1 ? 's' : '') . ' ago';
+                                            } elseif ($interval->h > 0) {
+                                                echo $interval->h . ' hour' . ($interval->h > 1 ? 's' : '') . ' ago';
+                                            } elseif ($interval->i > 0) {
+                                                echo $interval->i . ' minute' . ($interval->i > 1 ? 's' : '') . ' ago';
+                                            } else {
+                                                echo 'Just now';
+                                            }
+                                            ?>
+                                        </p>
+                                    </div>
+                                    <div class="flex space-x-2">
+                                        <button onclick="editAnnouncement(<?= $announcement['id'] ?>, '<?= htmlspecialchars($announcement['title']) ?>', '<?= htmlspecialchars($announcement['message']) ?>')" class="text-blue-600 hover:text-blue-800">
+                                            <i class="lni lni-pencil"></i>
+                                        </button>
+                                        <button onclick="deleteAnnouncement(<?= $announcement['id'] ?>)" class="text-red-600 hover:text-red-800">
+                                            <i class="lni lni-trash-can"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <p class="mt-2 text-gray-600"><?= htmlspecialchars($announcement['message']) ?></p>
+                                <?php if (!empty($announcement['image'])): ?>
+                                    <div class="mt-3">
+                                        <img src="<?= htmlspecialchars($announcement['image']) ?>" alt="Announcement Image" class="max-w-xs rounded-lg">
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <p class="text-gray-500 text-center py-4">No announcements available.</p>
+                    <?php endif; ?>
                 </div>
             </div>
 
@@ -254,7 +293,6 @@ include '../admin_panel/side_nav.php';
                                     <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Completed</span>
                                 </td>
                             </tr>
-                            <!-- Add more rows as needed -->
                         </tbody>
                     </table>
                 </div>
@@ -267,24 +305,32 @@ include '../admin_panel/side_nav.php';
         <div class="flex items-center justify-center min-h-screen px-4">
             <div class="bg-white rounded-lg shadow-xl w-full max-w-md">
                 <div class="flex justify-between items-center border-b p-4">
-                    <h3 class="text-xl font-semibold text-gray-800">Add Announcement</h3>
+                    <h3 class="text-xl font-semibold text-gray-800" id="modalTitle">Add Announcement</h3>
                     <button id="closeModal" class="text-gray-500 hover:text-gray-700">
                         <i class="lni lni-close text-xl"></i>
                     </button>
                 </div>
                 <div class="p-4">
-                    <form id="announcementForm">
+                    <form id="announcementForm" action="process_announcement.php" method="POST" enctype="multipart/form-data">
+                        <input type="hidden" id="announcementId" name="id">
                         <div class="mb-4">
                             <label for="title" class="block text-sm font-medium text-gray-700 mb-1">Title</label>
-                            <input type="text" id="title" name="title" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
+                            <input type="text" id="title" name="title" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500" required>
                         </div>
                         <div class="mb-4">
                             <label for="content" class="block text-sm font-medium text-gray-700 mb-1">Content</label>
-                            <textarea id="content" name="content" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"></textarea>
+                            <textarea id="content" name="content" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500" required></textarea>
                         </div>
-                        <div class="flex justify-end">
+                        <div class="mb-4">
+                            <label for="image" class="block text-sm font-medium text-gray-700 mb-1">Image (Optional)</label>
+                            <input type="file" id="image" name="image" accept="image/*" class="w-full">
+                        </div>
+                        <div class="flex justify-end space-x-2">
+                            <button type="button" id="deleteBtn" class="hidden bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition duration-200">
+                                Delete
+                            </button>
                             <button type="submit" class="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition duration-200">
-                                Post Announcement
+                                Save Announcement
                             </button>
                         </div>
                     </form>
@@ -294,82 +340,115 @@ include '../admin_panel/side_nav.php';
     </div>
 
     <script>
-        // Initialize Charts
-        document.addEventListener('DOMContentLoaded', function() {
-            // Borrowing Trends Chart
-            const borrowingTrendsCtx = document.getElementById('borrowingTrendsChart').getContext('2d');
-            new Chart(borrowingTrendsCtx, {
-                type: 'line',
-                data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-                    datasets: [{
-                        label: 'Books Borrowed',
-                        data: [65, 59, 80, 81, 56, 55],
-                        borderColor: '#0ea5e9',
-                        tension: 0.4,
-                        fill: false
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'top',
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
-
-            // Categories Distribution Chart
-            const categoriesCtx = document.getElementById('categoriesChart').getContext('2d');
-            new Chart(categoriesCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Fiction', 'Non-Fiction', 'Science', 'History', 'Technology'],
-                    datasets: [{
-                        data: [30, 25, 15, 20, 10],
-                        backgroundColor: [
-                            '#0ea5e9',
-                            '#3b82f6',
-                            '#60a5fa',
-                            '#93c5fd',
-                            '#bfdbfe'
-                        ]
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
-                        }
-                    }
-                }
-            });
-        });
-
         // Modal functionality
         const modal = document.getElementById('announcementModal');
         const addBtn = document.getElementById('addAnnouncementBtn');
         const closeBtn = document.getElementById('closeModal');
+        const form = document.getElementById('announcementForm');
+        const deleteBtn = document.getElementById('deleteBtn');
+        const modalTitle = document.getElementById('modalTitle');
 
-        addBtn.addEventListener('click', () => {
+        function editAnnouncement(id, title, content) {
+            document.getElementById('announcementId').value = id;
+            document.getElementById('title').value = title;
+            document.getElementById('content').value = content;
+            modalTitle.textContent = 'Edit Announcement';
+            deleteBtn.classList.remove('hidden');
             modal.classList.remove('hidden');
-        });
+        }
 
-        closeBtn.addEventListener('click', () => {
+        function deleteAnnouncement(id) {
+            if (confirm('Are you sure you want to delete this announcement?')) {
+                const formData = new FormData();
+                formData.append('action', 'delete');
+                formData.append('id', id);
+
+                fetch('process_announcement.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showNotification(data.message, 'success');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showNotification(data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    showNotification('An error occurred while deleting the announcement', 'error');
+                    console.error('Error:', error);
+                });
+            }
+        }
+
+        function openAnnouncementModal() {
+            form.reset();
+            document.getElementById('announcementId').value = '';
+            modalTitle.textContent = 'Add Announcement';
+            deleteBtn.classList.add('hidden');
+            modal.classList.remove('hidden');
+        }
+
+        function closeAnnouncementModal() {
             modal.classList.add('hidden');
-        });
+            form.reset();
+        }
+
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg ${
+                type === 'success' ? 'bg-green-500' : 'bg-red-500'
+            } text-white z-50`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        addBtn.addEventListener('click', openAnnouncementModal);
+
+        closeBtn.addEventListener('click', closeAnnouncementModal);
 
         modal.addEventListener('click', (e) => {
             if (e.target === modal) {
-                modal.classList.add('hidden');
+                closeAnnouncementModal();
             }
+        });
+
+        deleteBtn.addEventListener('click', () => {
+            const id = document.getElementById('announcementId').value;
+            deleteAnnouncement(id);
+        });
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const id = document.getElementById('announcementId').value;
+            formData.append('action', id ? 'update' : 'add');
+            
+            fetch('process_announcement.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification(data.message, 'success');
+                    closeAnnouncementModal();
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showNotification(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                showNotification('An error occurred while saving the announcement', 'error');
+                console.error('Error:', error);
+            });
         });
     </script>
 </body>

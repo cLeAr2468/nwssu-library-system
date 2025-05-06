@@ -40,63 +40,97 @@ include '../admin_panel/side_nav.php';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Categories</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="../admin_style/design.css">
-    <link rel="stylesheet" href="../admin_style/style.css">
-    <link rel="stylesheet" href="../style/styleshitt.css">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> <!-- Include SweetAlert -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
 </head>
-<body>
-<div class="main p-3">
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-md-10 fw-bold fs-3">
-                    <p><span>Dashboard</span></p>
-                </div>
+<body class="bg-gray-50">
+    <div class="min-h-screen p-4 ml-64"> <!-- Adjusted for sidebar -->
+        <div class="mb-6">
+            <div class="flex items-center">
+                <h1 class="text-2xl font-bold text-gray-800">Dashboard</h1>
             </div>
         </div>
-    <div class="container my-4">
-        <div class="border-box">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1 class="h3">Categories</h1>
-                <div class="search-input-wrapper">
-                    <i class="bi bi-search position-absolute" style="left: 15px; top: 50%; transform: translateY(-50%);"></i>
-                    <input type="text" id="searchInput" placeholder="Search Category" class="form-control control rounded-pill ps-5" onkeyup="searchCategories()">
+
+        <div class="bg-white rounded-lg shadow-sm p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-semibold text-gray-800">Categories</h2>
+                <div class="relative">
+                    <input type="text" 
+                           id="searchInput" 
+                           placeholder="Search Category" 
+                           class="pl-10 pr-4 py-2 border rounded-full w-64 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                           onkeyup="searchCategories()">
+                    <i class="bi bi-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
                 </div>
             </div>
-            <table class="table table-striped">
-                <thead>
-                    <tr class="table-primary">
-                        <th>Category</th>
-                        <th>Item(s)</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody id="categoriesTableBody">
-                    <?php foreach ($categories as $category): ?>
-                        <tr>
-                            <td><a href="categbooks.php?category=<?php echo urlencode($category['category']); ?>" class="book-title"><?php echo htmlspecialchars($category['category']); ?></a></td>
-                            <td><?php echo htmlspecialchars($category['item_count']); ?></td>
-                            <td><a href="categbooks.php?category=<?php echo urlencode($category['category']); ?>">Browse</a></td>
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead>
+                        <tr class="bg-primary-600">
+                            <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Category</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Item(s)</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Action</th>
                         </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody id="categoriesTableBody" class="bg-white divide-y divide-gray-200">
+                        <?php foreach ($categories as $category): ?>
+                            <tr class="hover:bg-gray-50 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <a href="categbooks.php?category=<?php echo urlencode($category['category']); ?>" 
+                                       class="text-[#156295] font-bold hover:text-blue-800">
+                                        <?php echo htmlspecialchars($category['category']); ?>
+                                    </a>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-gray-500">
+                                    <?php echo htmlspecialchars($category['item_count']); ?>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <a href="categbooks.php?category=<?php echo urlencode($category['category']); ?>" 
+                                       class="text-blue-600 hover:text-blue-800 font-medium">
+                                        Browse
+                                    </a>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
-</div>
-<script>
-    function searchCategories() {
-        const input = document.getElementById('searchInput').value.toLowerCase(); // Get the search input
-        const rows = document.querySelectorAll('#categoriesTableBody tr'); // Select all rows in the category table
-        rows.forEach(row => {
-            const categoryName = row.cells[0].textContent.toLowerCase(); // Get the category name from the first cell
-            // Show row if input matches category name
-            row.style.display = categoryName.includes(input) ? '' : 'none'; // Show or hide row
-        });
-    }
-</script>
+
+    <script>
+        function searchCategories() {
+            const input = document.getElementById('searchInput').value.toLowerCase();
+            const rows = document.querySelectorAll('#categoriesTableBody tr');
+            rows.forEach(row => {
+                const categoryName = row.cells[0].textContent.toLowerCase();
+                row.style.display = categoryName.includes(input) ? '' : 'none';
+            });
+        }
+    </script>
 </body>
 </html>

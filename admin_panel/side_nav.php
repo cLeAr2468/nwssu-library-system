@@ -113,12 +113,6 @@
                     </a>
                 </li>
                 <li>
-                    <a href="../admin_panel/announcement.php" class="flex items-center p-2 text-gray-300 rounded-lg hover:bg-sidebar-hover group <?= ($current_page == 'announcement.php') ? 'bg-sidebar-hover' : '' ?>">
-                        <i class="lni lni-megaphone text-xl"></i>
-                        <span class="ml-3">Announcements</span>
-                    </a>
-                </li>
-                <li>
                     <a href="../admin_panel/fine_rec.php" class="flex items-center p-2 text-gray-300 rounded-lg hover:bg-sidebar-hover group <?= ($current_page == 'fine_rec.php') ? 'bg-sidebar-hover' : '' ?>">
                         <i class="lni lni-coin text-xl"></i>
                         <span class="ml-3">Fine Records</span>

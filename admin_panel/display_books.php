@@ -101,7 +101,7 @@ include '../admin_panel/ins-dis-function.php';
                     <?php foreach ($books as $book): ?>
                                 <tr class="hover:bg-gray-50">
                                     <td class="px-6 py-4">
-                                        <div class="text-sm font-medium text-gray-900"><?php echo htmlspecialchars($book['title']); ?></div>
+                                        <div class="text-sm font-medium text-[#156295] font-bold"><?php echo htmlspecialchars($book['title']); ?></div>
                                         <div class="text-sm text-gray-500">
                                             <div>ISBN: <?php echo htmlspecialchars($book['ISBN']); ?></div>
                                             <div>Call No: <?php echo htmlspecialchars($book['call_no']); ?></div>
@@ -166,8 +166,7 @@ include '../admin_panel/ins-dis-function.php';
                         <button onclick="closeModal()" class="text-gray-400 hover:text-gray-500 transition-colors">
                             <i class="lni lni-close text-xl"></i>
                         </button>
-                </div>
-                    
+                </div> 
                     <div class="mt-6 max-h-[calc(100vh-200px)] overflow-y-auto">
                         <form id="addBookForm" method="POST" action="process_book.php" enctype="multipart/form-data" class="space-y-6">
                         <input type="hidden" id="book_id" name="book_id" value="">
@@ -305,34 +304,40 @@ include '../admin_panel/ins-dis-function.php';
     </div>
 
     <script>
-        // Function to open modal
-        function openModal() {
-            const modal = document.getElementById('addBookModal');
-            modal.classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
-            resetModal(); // Reset form when opening for new entry
-            // Set modal for Add mode
-            document.getElementById('addBookModalLabel').textContent = 'Add New Book';
-            document.getElementById('submitButton').textContent = 'Save Book';
-            // Show image upload field for new books
-            document.getElementById('books_image').parentElement.style.display = 'block';
+        let originalValues = {};
+
+        function checkFormChanges() {
+            const form = document.getElementById('addBookForm');
+            const submitButton = document.getElementById('submitButton');
+            const bookId = document.getElementById('book_id').value;
+
+            // Only check for changes if we're in edit mode
+            if (bookId) {
+                let hasChanges = false;
+                
+                // Check each form field against original values
+                const fields = [
+                    'material_type', 'issn', 'sub_type', 'call_no', 'category',
+                    'title', 'author', 'publisher', 'status', 'copies', 'ISBN',
+                    'edition', 'copyright', 'page_number', 'subject', 'date_acquired',
+                    'summary', 'content'
+                ];
+
+                for (const field of fields) {
+                    const currentValue = form[field] ? form[field].value : '';
+                    if (currentValue !== originalValues[field]) {
+                        hasChanges = true;
+                        break;
+                    }
+                }
+
+                // Enable/disable submit button based on changes
+                submitButton.disabled = !hasChanges;
+                submitButton.classList.toggle('opacity-50', !hasChanges);
+                submitButton.classList.toggle('cursor-not-allowed', !hasChanges);
+            }
         }
 
-        // Function to close modal
-        function closeModal() {
-            const modal = document.getElementById('addBookModal');
-            modal.classList.add('hidden');
-            document.body.style.overflow = 'auto';
-            resetModal();
-        }
-
-        // Function to reset the modal form
-        function resetModal() {
-            document.getElementById('addBookForm').reset();
-            document.getElementById('book_id').value = '';
-        }
-
-        // Function to populate the form for editing
         function populateEditForm(book) {
             openModal();
             // Set modal for Edit mode
@@ -345,7 +350,7 @@ include '../admin_panel/ins-dis-function.php';
             // Set the book ID for update
             document.getElementById('book_id').value = book.id;
             
-            // Populate form fields
+            // Store original values and populate form fields
             const form = document.getElementById('addBookForm');
             form.material_type.value = book.material_type || '';
             form.issn.value = book.issn || '';
@@ -365,6 +370,71 @@ include '../admin_panel/ins-dis-function.php';
             form.date_acquired.value = book.date_acquired || '';
             form.summary.value = book.summary || '';
             form.content.value = book.content || '';
+
+            // Store original values for comparison
+            originalValues = {
+                material_type: book.material_type || '',
+                issn: book.issn || '',
+                sub_type: book.sub_type || '',
+                call_no: book.call_no || '',
+                category: book.category || '',
+                title: book.title || '',
+                author: book.author || '',
+                publisher: book.publisher || '',
+                status: book.status || '',
+                copies: book.copies || '',
+                ISBN: book.ISBN || '',
+                edition: book.edition || '',
+                copyright: book.copyright || '',
+                page_number: book.page_number || '',
+                subject: book.subject || '',
+                date_acquired: book.date_acquired || '',
+                summary: book.summary || '',
+                content: book.content || ''
+            };
+
+            // Initially disable update button
+            const submitButton = document.getElementById('submitButton');
+            submitButton.disabled = true;
+            submitButton.classList.add('opacity-50', 'cursor-not-allowed');
+
+            // Add change event listeners to all form fields
+            const formFields = form.querySelectorAll('input, select, textarea');
+            formFields.forEach(field => {
+                field.addEventListener('input', checkFormChanges);
+                field.addEventListener('change', checkFormChanges);
+            });
+        }
+
+        function openModal() {
+            const modal = document.getElementById('addBookModal');
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            resetModal();
+            
+            // Reset original values and enable submit button for new entries
+            originalValues = {};
+            const submitButton = document.getElementById('submitButton');
+            submitButton.disabled = false;
+            submitButton.classList.remove('opacity-50', 'cursor-not-allowed');
+            
+            document.getElementById('addBookModalLabel').textContent = 'Add New Book';
+            document.getElementById('submitButton').textContent = 'Save Book';
+            document.getElementById('books_image').parentElement.style.display = 'block';
+        }
+
+        // Function to close modal
+        function closeModal() {
+            const modal = document.getElementById('addBookModal');
+            modal.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+            resetModal();
+        }
+
+        // Function to reset the modal form
+        function resetModal() {
+            document.getElementById('addBookForm').reset();
+            document.getElementById('book_id').value = '';
         }
 
         // Handle form submission
