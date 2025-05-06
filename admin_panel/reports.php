@@ -231,21 +231,6 @@ include '../admin_panel/side_nav.php';
                 </div>
             </div>
 
-            <!-- Charts Section -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                <!-- Borrowing Trends -->
-                <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Borrowing Trends</h3>
-                    <canvas id="borrowingTrendsChart" height="300"></canvas>
-                </div>
-
-                <!-- User Activity -->
-                <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">User Activity</h3>
-                    <canvas id="userActivityChart" height="300"></canvas>
-                </div>
-            </div>
-
             <!-- Detailed Reports -->
             <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
                 <h3 class="text-lg font-semibold text-gray-800 mb-4">Detailed Reports</h3>
