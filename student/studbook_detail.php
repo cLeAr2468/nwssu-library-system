@@ -21,9 +21,15 @@ try {
                 $book_id = $_POST['id'] ?? '';
                 
                 // Get book details for logging
-                $bookQuery = $conn->prepare("SELECT title FROM books WHERE id = ?");
+                $bookQuery = $conn->prepare("SELECT title, material_type FROM books WHERE id = ?");
                 $bookQuery->execute([$book_id]);
                 $book = $bookQuery->fetch(PDO::FETCH_ASSOC);
+
+                // Check if the material type is "book"
+                if ($book['material_type'] !== 'Book') {
+                    echo json_encode(['success' => false, 'message' => 'Only books can be reserved. This material cannot be reserved.']);
+                    exit();
+                }
                 
                 // Log the reservation activity
                 logActivity($user_id, 'reservation', 'Reserved book: ' . $book['title']);
@@ -262,7 +268,7 @@ try {
                                 Book Cover
                             </div>
                         <?php endif; ?>
-                        <?php if ($book['status'] === 'available'): ?>
+                        <?php if ($book['status'] === 'available' && strtolower($book['material_type']) === 'book'): ?>
                             <button class="reserve-btn bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-full transition duration-300 mt-2 <?php echo ($isReserved || $isBorrowed) ? 'opacity-50 cursor-not-allowed' : ''; ?>"
                                 data-book-id="<?php echo htmlspecialchars($book['id']); ?>"
                                 <?php echo ($isReserved || $isBorrowed) ? 'disabled' : ''; ?>>
@@ -454,7 +460,7 @@ try {
             <div class="mt-4 flex flex-col space-y-3">
                 <div class="flex items-center justify-between">
                     <div class="flex space-x-2">
-                        <?php if ($book['status'] === 'available'): ?>
+                        <?php if ($book['status'] === 'available' && strtolower($book['material_type']) === 'book'): ?>
                             <button class="reserve-btn bg-blue-500 hover:bg-blue-600 text-white px-4 py-1.5 rounded-full text-sm font-medium transition duration-150 ease-in-out <?php echo ($isReserved || $isBorrowed) ? 'opacity-50 cursor-not-allowed' : ''; ?>"
                                 data-book-id="<?php echo htmlspecialchars($book['id']); ?>"
                                 <?php echo ($isReserved || $isBorrowed) ? 'disabled' : ''; ?>>

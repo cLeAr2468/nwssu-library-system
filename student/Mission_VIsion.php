@@ -83,13 +83,12 @@ include '../student/side_navbars.php';
     <!-- Vision & Mission Section (School) -->
     <section class="vision-mission">
         <div class="container border-box">
-            <h1>Vision & Mission</h1>
             <div class="divider"></div>
             <div class="content">
                 <h2 class="vision">Vision</h2>
-                <p>NwSSU shall lead in providing highly technical and professional education and lifelong learning in the trade, fishery, agriculture, science, education, commerce, engineering, forestry, nautical, and other emerging programs in the digital age. It shall generate cutting-edge technology and undertake sustainable community development in accordance with the university mandates, thrust, and direction.</p>
-                <h2 class="mission">Mission</h2>
                 <p>The premier technological university in the region providing transformative education where graduates are globally competitive, innovative, and responsive to demands of the changing world.</p>
+                <h2 class="mission">Mission</h2>
+                <p>NwSSU shall lead in providing highly technical and professional education and lifelong learning in the trade, fishery, agriculture, science, education, commerce, engineering, forestry, nautical, and other emerging programs in the digital age. It shall generate cutting-edge technology and undertake sustainable community development in accordance with the university mandates, thrust, and direction.</p>
                 <h2 class="mission">Core Values</h2>
                 <p>Resilience. Integrity. Service. Excellence.</p>
             </div>

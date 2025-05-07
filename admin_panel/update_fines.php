@@ -1,0 +1,67 @@
+<?php
+include '../component-library/connect.php';
+
+function updateOverdueFines($conn) {
+    try {
+        // Get all returned books where return_date is later than return_sched
+        $query = $conn->prepare("
+            SELECT bb.user_id, bb.book_id, bb.return_sched, rb.return_date
+            FROM borrowed_books bb
+            JOIN return_books rb ON bb.user_id = rb.user_id AND bb.book_id = rb.book_id
+            WHERE bb.status = 'returned'
+            AND rb.return_date > bb.return_sched
+            AND (bb.fine IS NULL OR bb.fine = 0)
+        ");
+        $query->execute();
+        $overdueBooks = $query->fetchAll(PDO::FETCH_ASSOC);
+
+        foreach ($overdueBooks as $book) {
+            // Calculate days overdue using TIMESTAMPDIFF
+            $updateQuery = $conn->prepare("
+                UPDATE borrowed_books 
+                SET fine = TIMESTAMPDIFF(DAY, return_sched, :return_date) * 3
+                WHERE user_id = :user_id 
+                AND book_id = :book_id 
+                AND status = 'returned'
+            ");
+            $updateQuery->execute([
+                ':return_date' => $book['return_date'],
+                ':user_id' => $book['user_id'],
+                ':book_id' => $book['book_id']
+            ]);
+        }
+
+        return true;
+    } catch (PDOException $e) {
+        error_log("Error updating fines: " . $e->getMessage());
+        return false;
+    }
+}
+
+// Function to check and update fines for currently borrowed books
+function updateCurrentOverdueFines($conn) {
+    try {
+        // Update fines for currently borrowed books that are overdue
+        $updateQuery = $conn->prepare("
+            UPDATE borrowed_books 
+            SET fine = TIMESTAMPDIFF(DAY, return_sched, CURRENT_TIMESTAMP) * 3,
+                status = CASE 
+                    WHEN return_sched < CURRENT_TIMESTAMP THEN 'overdue' 
+                    ELSE status 
+                END
+            WHERE return_sched < CURRENT_TIMESTAMP 
+            AND status IN ('borrowed', 'overdue')
+        ");
+        $updateQuery->execute();
+        
+        return true;
+    } catch (PDOException $e) {
+        error_log("Error updating current fines: " . $e->getMessage());
+        return false;
+    }
+}
+
+// Call the functions when this file is included
+updateOverdueFines($conn);
+updateCurrentOverdueFines($conn);
+?> 

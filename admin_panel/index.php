@@ -13,6 +13,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $password = htmlspecialchars($_POST['pass']);
 
     if ($username == 'admin' && $password == 'admin') {
+        // Include the fines update functions
+        include '../admin_panel/update_fines.php';
+        
+        // Update fines before setting session
+        updateOverdueFines($conn);
+        updateCurrentOverdueFines($conn);
+        
         $_SESSION['admin_logged_in'] = true;
         header('Location: ../admin_panel/admin_dashboard.php');
         exit();
