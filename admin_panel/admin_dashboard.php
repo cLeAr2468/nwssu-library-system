@@ -1,6 +1,19 @@
-<?php 
+<?php
+session_start();
+if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
+    header('Location: index.php');
+    exit();
+}
+
+include '../component-library/connect.php';
 include '../admin_panel/dash-function.php';
 include '../admin_panel/side_nav.php';
+include '../admin_panel/update_fines.php'; // Include the fines update functions
+
+// Update fines when dashboard loads
+updateOverdueFines($conn);
+updateCurrentOverdueFines($conn);
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -225,8 +238,8 @@ include '../admin_panel/side_nav.php';
                             <div class="border border-gray-200 rounded-lg p-4 relative">
                                 <div class="flex justify-between items-start">
                                     <div>
-                                        <h4 class="font-semibold text-gray-800"><?= htmlspecialchars($announcement['title']) ?></h4>
-                                        <p class="text-sm text-gray-500 mt-1">
+                                    
+                                        <p class="text-sm text-gray-500 mb-2">
                                             <?php
                                             $post_time = new DateTime($announcement['date']);
                                             $now = new DateTime();
@@ -246,6 +259,7 @@ include '../admin_panel/side_nav.php';
                                             }
                                             ?>
                                         </p>
+                                        <h4 class="font-semibold text-gray-800"><?= htmlspecialchars($announcement['title']) ?></h4>
                                     </div>
                                     <div class="flex space-x-2">
                                         <button onclick="editAnnouncement(<?= $announcement['id'] ?>, '<?= htmlspecialchars($announcement['title']) ?>', '<?= htmlspecialchars($announcement['message']) ?>')" class="text-blue-600 hover:text-blue-800">
@@ -259,7 +273,7 @@ include '../admin_panel/side_nav.php';
                                 <p class="mt-2 text-gray-600"><?= htmlspecialchars($announcement['message']) ?></p>
                                 <?php if (!empty($announcement['image'])): ?>
                                     <div class="mt-3">
-                                        <img src="<?= htmlspecialchars($announcement['image']) ?>" alt="Announcement Image" class="max-w-xs rounded-lg">
+                                        <img src="<?= htmlspecialchars($announcement['image']) ?>" alt="Announcement Image" class="max-w-xs max-h-40 rounded-lg">
                                     </div>
                                 <?php endif; ?>
                             </div>

@@ -262,15 +262,6 @@ $total_pages = ceil($total_books / $books_per_page);
                                                 <span class="<?php echo $book['status'] === 'available' ? 'text-green-600' : 'text-red-600'; ?>">
                                                     <?php echo htmlspecialchars($book['status']); ?>
                                                 </span>
-                                                <?php if ($book['reservation_status'] === 'borrowed'): ?>
-                                                    <span class="inline-flex items-center px-2 py-1 text-xs bg-gray-400 text-white rounded-full">
-                                                        Borrowed
-                                                    </span>
-                                                <?php elseif ($book['reservation_status'] === 'reserved'): ?>
-                                                    <span class="inline-flex items-center px-2 py-1 text-xs bg-gray-400 text-white rounded-full">
-                                                        Reserved
-                                                    </span>
-                                                <?php endif; ?>
                                             </div>
                                         </td>
                                         <td class="px-4 py-4 text-center">
@@ -477,7 +468,7 @@ $total_pages = ceil($total_books / $books_per_page);
                                             <button class="text-xs bg-gray-400 text-white px-3 py-1.5 rounded-full cursor-not-allowed" disabled>
                                                 Reserved
                                             </button>
-                                        <?php else: ?>
+                                        <?php elseif (strtolower($book['material_type']) === 'book'): ?>
                                             <button class="reserve-btn text-xs bg-blue-600 text-white px-3 py-1.5 rounded-full hover:bg-blue-700 transition-colors"
                                                 data-book-id="<?php echo htmlspecialchars($book['id']); ?>">
                                                 Reserve

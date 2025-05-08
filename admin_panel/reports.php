@@ -1,6 +1,100 @@
 <?php
 include '../admin_panel/dash-function.php';
 include '../admin_panel/side_nav.php';
+
+// Get date range filter
+$dateRange = $_GET['date_range'] ?? 'last_30_days';
+$reportType = $_GET['report_type'] ?? 'borrowing';
+
+// Calculate date range
+$endDate = date('Y-m-d');
+switch ($dateRange) {
+    case 'last_7_days':
+        $startDate = date('Y-m-d', strtotime('-7 days'));
+        break;
+    case 'last_30_days':
+        $startDate = date('Y-m-d', strtotime('-30 days'));
+        break;
+    case 'last_3_months':
+        $startDate = date('Y-m-d', strtotime('-3 months'));
+        break;
+    case 'last_year':
+        $startDate = date('Y-m-d', strtotime('-1 year'));
+        break;
+    default:
+        $startDate = date('Y-m-d', strtotime('-30 days'));
+}
+
+// Get statistics
+try {
+    // Total Borrowings
+    $borrowedQuery = $conn->prepare("
+        SELECT COUNT(*) as total_borrowed 
+        FROM borrowed_books 
+        WHERE borrowed_date BETWEEN ? AND ?
+    ");
+    $borrowedQuery->execute([$startDate, $endDate]);
+    $totalBorrowed = $borrowedQuery->fetch(PDO::FETCH_ASSOC)['total_borrowed'];
+
+    // Active Users
+    $activeUsersQuery = $conn->prepare("
+        SELECT COUNT(DISTINCT user_id) as active_users 
+        FROM borrowed_books 
+        WHERE borrowed_date BETWEEN ? AND ?
+    ");
+    $activeUsersQuery->execute([$startDate, $endDate]);
+    $activeUsers = $activeUsersQuery->fetch(PDO::FETCH_ASSOC)['active_users'];
+
+    // Fine Collection
+    $finesQuery = $conn->prepare("
+        SELECT COALESCE(SUM(bb.fine), 0) as total_fines 
+        FROM borrowed_books bb
+        JOIN return_books rb ON bb.user_id = rb.user_id AND bb.book_id = rb.book_id
+        WHERE bb.borrowed_date BETWEEN ? AND ?
+        AND bb.status = 'returned'
+    ");
+    $finesQuery->execute([$startDate, $endDate]);
+    $totalFines = $finesQuery->fetch(PDO::FETCH_ASSOC)['total_fines'];
+
+    // Return Rate
+    $returnedQuery = $conn->prepare("
+        SELECT COUNT(*) as total_returned 
+        FROM return_books 
+        WHERE return_date BETWEEN ? AND ?
+    ");
+    $returnedQuery->execute([$startDate, $endDate]);
+    $totalReturned = $returnedQuery->fetch(PDO::FETCH_ASSOC)['total_returned'];
+    
+    $returnRate = $totalBorrowed > 0 ? round(($totalReturned / $totalBorrowed) * 100) : 0;
+
+    // Get recent activities
+    $activitiesQuery = $conn->prepare("
+        SELECT a.*, u.first_name, u.last_name 
+        FROM activities a 
+        LEFT JOIN user_info u ON a.user_id = u.user_id 
+        ORDER BY a.activity_date DESC 
+        LIMIT 5
+    ");
+    $activitiesQuery->execute();
+    $recentActivities = $activitiesQuery->fetchAll(PDO::FETCH_ASSOC);
+
+    // Get borrowing trends data for chart
+    $trendsQuery = $conn->prepare("
+        SELECT 
+            DATE(borrowed_date) as date,
+            COUNT(*) as borrowed_count
+        FROM borrowed_books 
+        WHERE borrowed_date BETWEEN ? AND ?
+        GROUP BY DATE(borrowed_date)
+        ORDER BY date
+    ");
+    $trendsQuery->execute([$startDate, $endDate]);
+    $borrowingTrends = $trendsQuery->fetchAll(PDO::FETCH_ASSOC);
+
+} catch (PDOException $e) {
+    echo "Error: " . $e->getMessage();
+    exit();
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -45,10 +139,10 @@ include '../admin_panel/side_nav.php';
                     <p class="text-gray-600">Library performance metrics and statistics</p>
                 </div>
                 <div class="mt-4 md:mt-0 flex space-x-2">
-                    <button class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition duration-200 flex items-center">
+                    <button onclick="exportReport()" class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition duration-200 flex items-center">
                         <i class="lni lni-download mr-2"></i> Export Report
                     </button>
-                    <button class="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition duration-200 flex items-center">
+                    <button onclick="printReport()" class="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition duration-200 flex items-center">
                         <i class="lni lni-printer mr-2"></i> Print Report
                     </button>
                 </div>
@@ -56,30 +150,29 @@ include '../admin_panel/side_nav.php';
 
             <!-- Date Range Filter -->
             <div class="bg-white rounded-xl shadow-sm p-4 border border-gray-100 mb-6">
-                <div class="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-4">
+                <form id="filterForm" class="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-4">
                     <div class="flex items-center space-x-2">
                         <label class="text-sm font-medium text-gray-700">Date Range:</label>
-                        <select class="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500">
-                            <option>Last 7 days</option>
-                            <option>Last 30 days</option>
-                            <option>Last 3 months</option>
-                            <option>Last year</option>
-                            <option>Custom range</option>
+                        <select name="date_range" class="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500">
+                            <option value="last_7_days" <?= $dateRange === 'last_7_days' ? 'selected' : '' ?>>Last 7 days</option>
+                            <option value="last_30_days" <?= $dateRange === 'last_30_days' ? 'selected' : '' ?>>Last 30 days</option>
+                            <option value="last_3_months" <?= $dateRange === 'last_3_months' ? 'selected' : '' ?>>Last 3 months</option>
+                            <option value="last_year" <?= $dateRange === 'last_year' ? 'selected' : '' ?>>Last year</option>
                         </select>
                     </div>
                     <div class="flex items-center space-x-2">
                         <label class="text-sm font-medium text-gray-700">Report Type:</label>
-                        <select class="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500">
-                            <option>Borrowing Statistics</option>
-                            <option>User Activity</option>
-                            <option>Fine Collection</option>
-                            <option>Book Inventory</option>
+                        <select name="report_type" class="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500">
+                            <option value="borrowing" <?= $reportType === 'borrowing' ? 'selected' : '' ?>>Borrowing Statistics</option>
+                            <option value="user_activity" <?= $reportType === 'user_activity' ? 'selected' : '' ?>>User Activity</option>
+                            <option value="fine_collection" <?= $reportType === 'fine_collection' ? 'selected' : '' ?>>Fine Collection</option>
+                            <option value="book_inventory" <?= $reportType === 'book_inventory' ? 'selected' : '' ?>>Book Inventory</option>
                         </select>
                     </div>
-                    <button class="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition duration-200">
+                    <button type="submit" class="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition duration-200">
                         Generate Report
                     </button>
-                </div>
+                </form>
             </div>
 
             <!-- Key Metrics -->
@@ -89,7 +182,7 @@ include '../admin_panel/side_nav.php';
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-sm font-medium text-gray-600">Total Borrowings</p>
-                            <p class="text-2xl font-bold text-gray-800">1,234</p>
+                            <p class="text-2xl font-bold text-gray-800"><?= $totalBorrowed ?></p>
                         </div>
                         <div class="bg-blue-100 p-3 rounded-full">
                             <i class="lni lni-book text-blue-600 text-xl"></i>
@@ -97,10 +190,7 @@ include '../admin_panel/side_nav.php';
                     </div>
                     <div class="mt-4">
                         <div class="flex items-center text-sm">
-                            <span class="text-green-500 flex items-center">
-                                <i class="lni lni-arrow-up mr-1"></i> 15%
-                            </span>
-                            <span class="text-gray-500 ml-2">vs last period</span>
+                            <span class="text-gray-500">Period: <?= date('M d', strtotime($startDate)) ?> - <?= date('M d', strtotime($endDate)) ?></span>
                         </div>
                     </div>
                 </div>
@@ -110,7 +200,7 @@ include '../admin_panel/side_nav.php';
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-sm font-medium text-gray-600">Active Users</p>
-                            <p class="text-2xl font-bold text-gray-800">856</p>
+                            <p class="text-2xl font-bold text-gray-800"><?= $activeUsers ?></p>
                         </div>
                         <div class="bg-green-100 p-3 rounded-full">
                             <i class="lni lni-users text-green-600 text-xl"></i>
@@ -118,10 +208,7 @@ include '../admin_panel/side_nav.php';
                     </div>
                     <div class="mt-4">
                         <div class="flex items-center text-sm">
-                            <span class="text-green-500 flex items-center">
-                                <i class="lni lni-arrow-up mr-1"></i> 8%
-                            </span>
-                            <span class="text-gray-500 ml-2">vs last period</span>
+                            <span class="text-gray-500">Unique borrowers</span>
                         </div>
                     </div>
                 </div>
@@ -131,7 +218,7 @@ include '../admin_panel/side_nav.php';
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-sm font-medium text-gray-600">Fine Collection</p>
-                            <p class="text-2xl font-bold text-gray-800">₱12,450</p>
+                            <p class="text-2xl font-bold text-gray-800">₱<?= number_format($totalFines, 2) ?></p>
                         </div>
                         <div class="bg-yellow-100 p-3 rounded-full">
                             <i class="lni lni-coin text-yellow-600 text-xl"></i>
@@ -139,10 +226,7 @@ include '../admin_panel/side_nav.php';
                     </div>
                     <div class="mt-4">
                         <div class="flex items-center text-sm">
-                            <span class="text-red-500 flex items-center">
-                                <i class="lni lni-arrow-down mr-1"></i> 3%
-                            </span>
-                            <span class="text-gray-500 ml-2">vs last period</span>
+                            <span class="text-gray-500">Total fines collected</span>
                         </div>
                     </div>
                 </div>
@@ -152,7 +236,7 @@ include '../admin_panel/side_nav.php';
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-sm font-medium text-gray-600">Return Rate</p>
-                            <p class="text-2xl font-bold text-gray-800">92%</p>
+                            <p class="text-2xl font-bold text-gray-800"><?= $returnRate ?>%</p>
                         </div>
                         <div class="bg-purple-100 p-3 rounded-full">
                             <i class="lni lni-checkmark text-purple-600 text-xl"></i>
@@ -160,13 +244,16 @@ include '../admin_panel/side_nav.php';
                     </div>
                     <div class="mt-4">
                         <div class="flex items-center text-sm">
-                            <span class="text-green-500 flex items-center">
-                                <i class="lni lni-arrow-up mr-1"></i> 2%
-                            </span>
-                            <span class="text-gray-500 ml-2">vs last period</span>
+                            <span class="text-gray-500">Books returned on time</span>
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <!-- Borrowing Trends Chart -->
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 mb-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Borrowing Trends</h3>
+                <canvas id="borrowingTrendsChart"></canvas>
             </div>
 
             <!-- User Logs Card -->
@@ -189,95 +276,32 @@ include '../admin_panel/side_nav.php';
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
-                            <?php
-                            // Fetch recent activities
-                            $recentActivities = $conn->query("
-                                SELECT a.*, u.first_name, u.last_name 
-                                FROM activities a 
-                                LEFT JOIN user_info u ON a.user_id = u.user_id 
-                                ORDER BY a.activity_date DESC 
-                                LIMIT 5
-                            ")->fetchAll(PDO::FETCH_ASSOC);
-
-                            foreach ($recentActivities as $activity):
-                            ?>
+                            <?php foreach ($recentActivities as $activity): ?>
                             <tr>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm font-medium text-gray-900">
-                                        <?php echo htmlspecialchars($activity['first_name'] . ' ' . $activity['last_name']); ?>
+                                        <?= htmlspecialchars($activity['first_name'] . ' ' . $activity['last_name']) ?>
                                     </div>
                                     <div class="text-sm text-gray-500">
-                                        <?php echo htmlspecialchars($activity['user_id']); ?>
+                                        <?= htmlspecialchars($activity['user_id']) ?>
                                     </div>
                                 </td>
                                 <td class="px-6 py-4">
                                     <div class="text-sm text-gray-900">
-                                        <?php echo htmlspecialchars($activity['activity_details']); ?>
+                                        <?= htmlspecialchars($activity['activity_details']) ?>
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    <?php echo date('M d, Y h:i A', strtotime($activity['activity_date'])); ?>
+                                    <?= date('M d, Y h:i A', strtotime($activity['activity_date'])) ?>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                        <?php echo $activity['status'] === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'; ?>">
-                                        <?php echo htmlspecialchars($activity['status']); ?>
+                                        <?= $activity['status'] === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' ?>">
+                                        <?= htmlspecialchars($activity['status']) ?>
                                     </span>
                                 </td>
                             </tr>
                             <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Charts Section -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                <!-- Borrowing Trends -->
-                <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Borrowing Trends</h3>
-                    <canvas id="borrowingTrendsChart" height="300"></canvas>
-                </div>
-
-                <!-- User Activity -->
-                <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">User Activity</h3>
-                    <canvas id="userActivityChart" height="300"></canvas>
-                </div>
-            </div>
-
-            <!-- Detailed Reports -->
-            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                <h3 class="text-lg font-semibold text-gray-800 mb-4">Detailed Reports</h3>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Report Type</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Period</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Generated</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Monthly Borrowing Report</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">March 2024</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2024-03-15</td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Completed</span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    <button class="text-primary-600 hover:text-primary-900 mr-3">
-                                        <i class="lni lni-download"></i>
-                                    </button>
-                                    <button class="text-primary-600 hover:text-primary-900">
-                                        <i class="lni lni-printer"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                            <!-- Add more rows as needed -->
                         </tbody>
                     </table>
                 </div>
@@ -293,19 +317,13 @@ include '../admin_panel/side_nav.php';
             new Chart(borrowingTrendsCtx, {
                 type: 'line',
                 data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    labels: <?= json_encode(array_column($borrowingTrends, 'date')) ?>,
                     datasets: [{
                         label: 'Books Borrowed',
-                        data: [65, 59, 80, 81, 56, 55],
+                        data: <?= json_encode(array_column($borrowingTrends, 'borrowed_count')) ?>,
                         borderColor: '#0ea5e9',
                         tension: 0.4,
                         fill: false
-                    }, {
-                        label: 'Books Returned',
-                        data: [60, 55, 75, 76, 52, 50],
-                        borderColor: '#10b981',
-                        tension: 0.4,
-                        fill: false
                     }]
                 },
                 options: {
@@ -317,40 +335,27 @@ include '../admin_panel/side_nav.php';
                     },
                     scales: {
                         y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
-
-            // User Activity Chart
-            const userActivityCtx = document.getElementById('userActivityChart').getContext('2d');
-            new Chart(userActivityCtx, {
-                type: 'bar',
-                data: {
-                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                    datasets: [{
-                        label: 'Active Users',
-                        data: [120, 190, 150, 170, 160, 90, 40],
-                        backgroundColor: '#0ea5e9',
-                        borderRadius: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'top',
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
                         }
                     }
                 }
             });
         });
+
+        // Export Report
+        function exportReport() {
+            const dateRange = document.querySelector('select[name="date_range"]').value;
+            const reportType = document.querySelector('select[name="report_type"]').value;
+            window.location.href = `export_report.php?date_range=${dateRange}&report_type=${reportType}`;
+        }
+
+        // Print Report
+        function printReport() {
+            window.print();
+        }
     </script>
 </body>
 </html> 

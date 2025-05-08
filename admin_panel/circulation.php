@@ -1,6 +1,7 @@
 <?php
 session_start();
 include '../component-library/connect.php';
+include './update_fines.php'; // Include the fine update functionality
 // Fetch user reservations for display
 
 
@@ -11,7 +12,7 @@ if (isset($_GET['type']) && isset($_GET['query'])) {
         $query = $_GET['query'];
         if ($type === 'user') {
             // Search for users by ID or name
-            $stmt = $conn->prepare("SELECT user_id, CONCAT(last_name, ', ', first_name, ' ', middle_name) as full_name, patron_type 
+            $stmt = $conn->prepare("SELECT user_id, CONCAT(last_name, ', ', first_name, ' ', middle_name) as full_name, patron_type, account_status 
                                   FROM user_info 
                                   WHERE user_id LIKE :query 
                                   OR last_name LIKE :query 
@@ -23,10 +24,12 @@ if (isset($_GET['type']) && isset($_GET['query'])) {
             echo json_encode([
                 'status' => 'success',
                 'suggestions' => array_map(function($row) {
+                    $statusClass = $row['account_status'] === 'active' ? 'text-green-600' : 'text-red-600';
                     return [
                         'id' => $row['user_id'],
                         'display_text' => $row['user_id'] . ' - ' . $row['full_name'],
-                        'sub_text' => 'Patron Type: ' . $row['patron_type']
+                        'sub_text' => 'Patron Type: ' . $row['patron_type'] . ' | <span class="' . $statusClass . '">Status: ' . $row['account_status'] . '</span>',
+                        'is_active' => $row['account_status'] === 'active'
                     ];
                 }, $results)
             ]);
@@ -105,10 +108,43 @@ if (isset($data['action'])) {
         $userId = $data['user_id'];
         $bookId = $data['book_id'];
         $copies = $data['copies'];
-        $returnSched = date('Y-m-d', strtotime('+14 days'));
-        $borrowedDate = date('Y-m-d');
         
         try {
+            // Check if user account is active and get patron type
+            $checkUserStatusQuery = "SELECT account_status, patron_type FROM user_info WHERE user_id = ?";
+            $stmtCheckUserStatus = $conn->prepare($checkUserStatusQuery);
+            $stmtCheckUserStatus->execute([$userId]);
+            $userInfo = $stmtCheckUserStatus->fetch(PDO::FETCH_ASSOC);
+            
+            if ($userInfo['account_status'] !== 'active') {
+                echo json_encode(['success' => false, 'message' => 'This user account is inactive. Cannot borrow books.']);
+                exit;
+            }
+
+            // Check if user has any overdue books
+            $checkOverdueQuery = "SELECT COUNT(*) as overdue_count FROM borrowed_books 
+                                 WHERE user_id = ? AND status = 'overdue'";
+            $stmtCheckOverdue = $conn->prepare($checkOverdueQuery);
+            $stmtCheckOverdue->execute([$userId]);
+            $overdueCount = $stmtCheckOverdue->fetchColumn();
+            
+            if ($overdueCount > 0) {
+                echo json_encode(['success' => false, 'message' => 'This user has overdue books. Please return them first.']);
+                exit;
+            }
+
+            // Set return schedule based on patron type
+            if (strpos($userInfo['patron_type'], 'student-') === 0) {
+                // For students: 1 day return schedule
+                $returnSched = date('Y-m-d H:i:s', strtotime('+1 day'));
+            } else if (strpos($userInfo['patron_type'], 'faculty-') === 0) {
+                // For faculty: 5 months return schedule
+                $returnSched = date('Y-m-d H:i:s', strtotime('+5 months'));
+            } else {
+                // Default to 1 day if patron type is unknown
+                $returnSched = date('Y-m-d H:i:s', strtotime('+1 day'));
+            }
+            
             // Check if the user has already borrowed this book
             $checkBorrowedQuery = "SELECT COUNT(*) as borrowed_count FROM borrowed_books 
                                   WHERE user_id = ? AND book_id = ? AND status = 'borrowed'";
@@ -148,9 +184,9 @@ if (isset($data['action'])) {
             }
             
             // Insert into borrowed_books table
-            $insertQuery = "INSERT INTO borrowed_books (user_id, book_id, copies, return_sched, status, borrowed_date) VALUES (?, ?, ?, ?, 'borrowed', ?)";
+            $insertQuery = "INSERT INTO borrowed_books (user_id, book_id, copies, return_sched, status) VALUES (?, ?, ?, ?, 'borrowed')";
             $stmtInsert = $conn->prepare($insertQuery);
-            $stmtInsert->execute([$userId, $bookId, $copies, $returnSched, $borrowedDate]);
+            $stmtInsert->execute([$userId, $bookId, $copies, $returnSched]);
             
             if ($reservedCount === 0) {
                 // User has no reserved books, decrement copies
@@ -184,30 +220,41 @@ if (isset($data['action'])) {
         $bookId = $data['book_id'];
         try {
             // Fetch the borrowed book details
-            $fetchBorrowedQuery = "SELECT copies FROM borrowed_books WHERE user_id = ? AND book_id = ?";
+            $fetchBorrowedQuery = "SELECT copies, return_sched, fine FROM borrowed_books WHERE user_id = ? AND book_id = ?";
             $stmtFetch = $conn->prepare($fetchBorrowedQuery);
             $stmtFetch->execute([$userId, $bookId]);
             $borrowedBook = $stmtFetch->fetch(PDO::FETCH_ASSOC);
+            
             if ($borrowedBook) {
-                // Insert into return_books table
-                $returnDate = date('Y-m-d'); // Get the current date
-                $insertReturnQuery = "INSERT INTO return_books (user_id, book_id, copies, status, return_date) VALUES (?, ?, ?, 'returned', ?)";
-                $stmtInsertReturn = $conn->prepare($insertReturnQuery);
-                $stmtInsertReturn->execute([$userId, $bookId, $borrowedBook['copies'], $returnDate]);
+                // Calculate fine if book is returned late
+                $fine = $borrowedBook['fine']; // Keep existing fine if any
+                if (strtotime($borrowedBook['return_sched']) < time()) {
+                    $daysLate = floor((time() - strtotime($borrowedBook['return_sched'])) / (60 * 60 * 24));
+                    $fine = $daysLate * 3; // ₱3 per day
+                }
                 
-                // Update the status in borrowed_books table to 'returned'
-                $updateBorrowedQuery = "UPDATE borrowed_books SET status = 'returned' WHERE user_id = ? AND book_id = ?";
+                // Insert into return_books table
+                $insertReturnQuery = "INSERT INTO return_books (user_id, book_id, copies, status) VALUES (?, ?, ?, 'returned')";
+                $stmtInsertReturn = $conn->prepare($insertReturnQuery);
+                $stmtInsertReturn->execute([$userId, $bookId, $borrowedBook['copies']]);
+                
+                // Update the status in borrowed_books table to 'returned' and set final fine
+                $updateBorrowedQuery = "UPDATE borrowed_books SET status = 'returned', fine = ? WHERE user_id = ? AND book_id = ?";
                 $stmtupdateBorrowed = $conn->prepare($updateBorrowedQuery);
-                $stmtupdateBorrowed->execute([$userId, $bookId]);
+                $stmtupdateBorrowed->execute([$fine, $userId, $bookId]);
+                
                 // Update the status in reserve_books table to 'returned'
                 $updateReserveQuery = "UPDATE reserve_books SET status = 'returned' WHERE user_id = ? AND book_id = ?";
                 $stmtUpdateReserve = $conn->prepare($updateReserveQuery);
                 $stmtUpdateReserve->execute([$userId, $bookId]);
+                
                 // Update the status in books table to 'available' and increment copies
                 $updateBooksQuery = "UPDATE books SET status = 'available', copies = copies + ? WHERE id = ?";
                 $stmtUpdateBooks = $conn->prepare($updateBooksQuery);
                 $stmtUpdateBooks->execute([$borrowedBook['copies'], $bookId]);
-                echo json_encode(['success' => true]);
+                
+                $message = $fine > 0 ? "Book returned successfully. Fine of ₱{$fine} has been applied." : "Book returned successfully.";
+                echo json_encode(['success' => true, 'message' => $message]);
             } else {
                 echo json_encode(['success' => false, 'message' => 'No borrowed record found.']);
             }
@@ -470,7 +517,9 @@ if (isset($data['action'])) {
                     .then(data => {
                         if (data.status === 'success' && data.suggestions.length > 0) {
                             suggestionsDiv.innerHTML = data.suggestions.map(suggestion => 
-                                `<div class="suggestion-item p-2 hover:bg-blue-600 hover:text-white cursor-pointer" data-id="${suggestion.id}">
+                                `<div class="suggestion-item p-2 hover:bg-blue-600 hover:text-white cursor-pointer ${!suggestion.is_active ? 'opacity-50' : ''}" 
+                                      data-id="${suggestion.id}" 
+                                      data-active="${suggestion.is_active}">
                                     <div class="font-medium">${suggestion.display_text}</div>
                                     <div class="text-sm text-gray-500 hover:text-white">${suggestion.sub_text}</div>
                                 </div>`
@@ -479,6 +528,16 @@ if (isset($data['action'])) {
                             // Add click handlers to suggestions
                             suggestionsDiv.querySelectorAll('.suggestion-item').forEach(item => {
                                 item.addEventListener('click', function() {
+                                    const isActive = this.dataset.active === 'true';
+                                    if (!isActive) {
+                                        Swal.fire({
+                                            title: 'Inactive Account',
+                                            text: 'This user account is inactive and cannot borrow books.',
+                                            icon: 'warning',
+                                            confirmButtonText: 'OK'
+                                        });
+                                        return;
+                                    }
                                     document.getElementById('user_id').value = this.dataset.id;
                                     suggestionsDiv.classList.add('hidden');
                                     

@@ -1,12 +1,5 @@
 <?php
-session_start();
-if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
-    header('Location: ../admin_panel/index.php'); // Adjust the path to your login page
-    exit();
-}
 include '../component-library/connect.php'; // Include the connection file
-
-
 try {
     $conn = new PDO("mysql:host=$db_host;dbname=$db_name", $user_name, $user_password);
     // Set PDO error mode to exception
@@ -76,7 +69,7 @@ function getTotalReservedBooksCount($conn)
 function getTotalBorrowedBooksCount($conn)
 {
     try {
-        $borrowedBooks = $conn->query("SELECT COUNT(*) FROM reserve_books WHERE status IN ('borrowed', 'overdue')");
+        $borrowedBooks = $conn->query("SELECT COUNT(*) FROM borrowed_books WHERE status IN ('borrowed', 'overdue')");
         return $borrowedBooks->fetchColumn();
     } catch (PDOException $e) {
         echo "Error: " . $e->getMessage();
@@ -88,7 +81,7 @@ function getTotalBorrowedBooksCount($conn)
 function getTotalUsersWithFinesCount($conn)
 {
     try {
-        $usersWithFines = $conn->query("SELECT COUNT(DISTINCT user_id) FROM reserve_books WHERE fine > 0");
+        $usersWithFines = $conn->query("SELECT COUNT(DISTINCT user_id) FROM borrowed_books WHERE fine > 0");
         return $usersWithFines->fetchColumn();
     } catch (PDOException $e) {
         echo "Error: " . $e->getMessage();

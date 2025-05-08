@@ -52,7 +52,6 @@ include "../student/register_function.php";
           <option value="student-BEED">student-BEED</option>
           <option value="student-BSF">student-BSF</option>
           <option value="student-BSABE">student-BSABE</option>
-          <option value="Faculty">Faculty</option>
         </select>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">

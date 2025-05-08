@@ -15,33 +15,45 @@ try {
 // Fetch user data from the database
 $query = $conn->query("SELECT * FROM user_info WHERE status = 'approved'");
 $userinfo = $query->fetchAll(PDO::FETCH_ASSOC);
-function userExists($userId, $email) {
+
+function checkExistingAccount($userId, $email) {
     global $conn;
-    $userIdExists = $conn->prepare("SELECT COUNT(*) FROM user_info WHERE user_id = ?");
-    $userIdExists->execute([$userId]);
-    $emailExists = $conn->prepare("SELECT COUNT(*) FROM user_info WHERE email = ?");
-    $emailExists->execute([$email]);
-    if ($userIdExists->fetchColumn() > 0) {
-        return "User ID already exists! Please enter another ID.";
-    } elseif ($emailExists->fetchColumn() > 0) {
-        return "Email already exists! Please enter another email.";
+    try {
+        // Check if user_id or email already exists
+        $stmt = $conn->prepare("SELECT * FROM user_info WHERE user_id = ? OR email = ?");
+        $stmt->execute([$userId, $email]);
+        $existingUser = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($existingUser) {
+            if ($existingUser['user_id'] === $userId) {
+                return "User ID already exists! Please use a different ID.";
+            }
+            if ($existingUser['email'] === $email) {
+                return "Email already exists! Please use a different email.";
+            }
+        }
+        return false; // No existing account found
+    } catch (PDOException $e) {
+        error_log("Error checking existing account: " . $e->getMessage());
+        return "Error checking existing account.";
     }
-    return false; // No duplicates found
 }
+
 function insertOrUpdateUser($data, $Id = null) {
     global $conn;
     try {
-        // If inserting a new user, check for existing user_id or email
+        // If inserting a new user, check for existing account
         if (!$Id) {
-            $duplicateMessage = userExists($data['user_id_input'], $data['email']);
-            if ($duplicateMessage) {
-                echo json_encode(['success' => false, 'message' => $duplicateMessage]);
-                return; // Exit the function if user exists
+            $existingAccount = checkExistingAccount($data['user_id_input'], $data['email']);
+            if ($existingAccount) {
+                echo json_encode(['success' => false, 'message' => $existingAccount]);
+                return;
             }
             // Set default values for new users
             $data['status'] = 'approved'; // Default status
             $data['account_status'] = 'active'; // Default account status
         }
+
         $imagePath = null; // Default to null
         // Check if the image is uploaded and no error occurred
         if (isset($_FILES['images']) && $_FILES['images']['error'] === UPLOAD_ERR_OK) {
@@ -58,6 +70,7 @@ function insertOrUpdateUser($data, $Id = null) {
                 throw new Exception('Failed to upload the image.');
             }
         }
+
         if ($Id) {
             // Update existing user
             $dataToBind = [];
@@ -75,36 +88,36 @@ function insertOrUpdateUser($data, $Id = null) {
             if (!empty($data['password'])) {
                 $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT);
                 $query .= ", password = ?";
-                $dataToBind[] = $hashedPassword; // Add hashed password to data binding
+                $dataToBind[] = $hashedPassword;
             }
             // Check if new image is provided
             if ($imagePath) {
                 $query .= ", images = ?";
-                $dataToBind[] = $imagePath; // Add new image path to data binding
+                $dataToBind[] = $imagePath;
             }
             $query .= " WHERE user_id = ?";
-            $dataToBind[] = $Id; // Use user ID for the WHERE clause
+            $dataToBind[] = $Id;
             $stmt = $conn->prepare($query);
             $stmt->execute($dataToBind);
             echo json_encode(['success' => true, 'message' => "User updated successfully!"]);
         } else {
             // Insert new user
-            $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT); // Hash the password for security
+            $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT);
             $stmt = $conn->prepare("INSERT INTO user_info (
                 user_id, first_name, middle_name, last_name, patron_type, email, address, password, images, status, account_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            $data['images'] = $imagePath; // Add image path to the data array
+            $data['images'] = $imagePath;
             $dataToBind = [
-                $data['user_id_input'], // Bind the User ID input
+                $data['user_id_input'],
                 $data['first_name'],
                 $data['middle_name'],
                 $data['last_name'],
                 $data['patron_type'],
                 $data['email'],
                 $data['address'],
-                $hashedPassword, // Insert the hashed password
+                $hashedPassword,
                 $data['images'],
-                $data['status'], // Default to 'approved'
-                $data['account_status'], // Default to 'active'
+                $data['status'],
+                $data['account_status']
             ];
             $stmt->execute($dataToBind);
             echo json_encode(['success' => true, 'message' => "User added successfully!"]);
@@ -170,9 +183,14 @@ include '../admin_panel/side_nav.php';
                     <p class="text-gray-600">Manage library users and their accounts</p>
                 </div>
                 <div class="mt-4 md:mt-0">
-                    <button class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg transition duration-200 flex items-center" onclick="openAddUserModal()">
-                        <i class="lni lni-plus mr-2"></i> Add User
-                    </button>
+                    <div class="flex space-x-2">
+                        <button class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg transition duration-200 flex items-center" onclick="openAddUserModal('student')">
+                            <i class="lni lni-plus mr-2"></i> Add Student
+                        </button>
+                        <button class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition duration-200 flex items-center" onclick="openAddUserModal('faculty')">
+                            <i class="lni lni-plus mr-2"></i> Add Faculty
+                        </button>
+                    </div>
                 </div>
             </div>
             <!-- Search and Filter Section -->
@@ -195,15 +213,25 @@ include '../admin_panel/side_nav.php';
                         </select>
                         <select id="patronTypeFilter" class="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500">
                             <option value="all">All Types</option>
-                            <option value="student-BSA">student-BSA</option>
-                            <option value="student-BSCRIM">student-BSCRIM</option>
-                            <option value="student-BAT">student-BAT</option>
-                            <option value="student-BSIT">student-BSIT</option>
-                            <option value="student-BTLED">student-BTLED</option>
-                            <option value="student-BEED">student-BEED</option>
-                            <option value="student-BSF">student-BSF</option>
-                            <option value="student-BSABE">student-BSABE</option>
-                            <option value="Faculty">Faculty</option>
+                            <optgroup label="Students">
+                                <option value="student-BSA">student-BSA</option>
+                                <option value="student-BSCRIM">student-BSCRIM</option>
+                                <option value="student-BAT">student-BAT</option>
+                                <option value="student-BSIT">student-BSIT</option>
+                                <option value="student-BTLED">student-BTLED</option>
+                                <option value="student-BEED">student-BEED</option>
+                                <option value="student-BSF">student-BSF</option>
+                                <option value="student-BSABE">student-BSABE</option>
+                            </optgroup>
+                            <optgroup label="Faculty">
+                                <option value="faculty-Teaching">faculty-Teaching</option>
+                                <option value="faculty-Non-Teaching">faculty-Non-Teaching</option>
+                                <option value="faculty-Support Service">faculty-Support Service</option>
+                                <option value="faculty-Contract of Service">faculty-Contract of Service</option>
+                                <option value="faculty-Part-timer">faculty-Part-timer</option>
+                                <option value="faculty-Guard">faculty-Guard</option>
+                                <option value="faculty-Casual">faculty-Casual</option>
+                            </optgroup>
                         </select>
                     </div>
                 </div>
@@ -303,17 +331,8 @@ include '../admin_panel/side_nav.php';
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Patron Type <span class="text-red-500">*</span></label>
-                            <select name="patron_type" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                            <select name="patron_type" id="patronTypeSelect" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
                                 <option value="" disabled selected>Choose Patron type</option>
-                                <option value="student-BSA">student-BSA</option>
-                                <option value="student-BSCRIM">student-BSCRIM</option>
-                                <option value="student-BAT">student-BAT</option>
-                                <option value="student-BSIT">student-BSIT</option>
-                                <option value="student-BTLED">student-BTLED</option>
-                                <option value="student-BEED">student-BEED</option>
-                                <option value="student-BSF">student-BSF</option>
-                                <option value="student-BSABE">student-BSABE</option>
-                                <option value="Faculty">Faculty</option>
                             </select>
                         </div>
                         <div id="statusDiv" class="hidden">
@@ -354,6 +373,56 @@ include '../admin_panel/side_nav.php';
     </div>
     <script>
         let originalValues = {};
+        let currentUserType = 'student';
+
+        // Add filter functionality
+        function applyFilters() {
+            const statusFilter = document.getElementById('statusFilter').value;
+            const patronTypeFilter = document.getElementById('patronTypeFilter').value;
+            const searchInput = document.getElementById('searchInput').value.toLowerCase();
+            
+            const rows = document.querySelectorAll('tbody tr');
+            
+            rows.forEach(row => {
+                const status = row.querySelector('td:nth-child(4) span').textContent.trim();
+                const patronType = row.querySelector('td:nth-child(3) span').textContent.trim();
+                const userInfo = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
+                const contactInfo = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+                
+                let showRow = true;
+                
+                // Apply status filter
+                if (statusFilter !== 'all' && status !== statusFilter) {
+                    showRow = false;
+                }
+                
+                // Apply patron type filter
+                if (patronTypeFilter !== 'all' && patronType !== patronTypeFilter) {
+                    showRow = false;
+                }
+                
+                // Apply search filter
+                if (searchInput && !userInfo.includes(searchInput) && !contactInfo.includes(searchInput)) {
+                    showRow = false;
+                }
+                
+                row.style.display = showRow ? '' : 'none';
+            });
+        }
+
+        // Add event listeners for filters
+        document.addEventListener('DOMContentLoaded', function() {
+            const statusFilter = document.getElementById('statusFilter');
+            const patronTypeFilter = document.getElementById('patronTypeFilter');
+            const searchInput = document.getElementById('searchInput');
+            
+            statusFilter.addEventListener('change', applyFilters);
+            patronTypeFilter.addEventListener('change', applyFilters);
+            searchInput.addEventListener('input', applyFilters);
+            
+            // Initialize filters
+            applyFilters();
+        });
 
         function checkFormChanges() {
             const form = document.getElementById('userForm');
@@ -380,9 +449,10 @@ include '../admin_panel/side_nav.php';
             }
         }
 
-        function openAddUserModal() {
+        function openAddUserModal(userType) {
+            currentUserType = userType;
             document.getElementById('addUserModal').classList.remove('hidden');
-            document.getElementById('addUserModalLabel').textContent = 'Add New User';
+            document.getElementById('addUserModalLabel').textContent = userType === 'student' ? 'Add New Student' : 'Add New Faculty';
             document.getElementById('userForm').reset();
             document.getElementById('user_id').value = '';
             document.getElementById('passwordLabel').textContent = 'Create Password *';
@@ -391,9 +461,39 @@ include '../admin_panel/side_nav.php';
             document.getElementById('confirmPasswordInput').required = true;
             document.getElementById('passwordHint').textContent = 'Password is required for new users';
             document.getElementById('submitButton').textContent = 'Save User';
+            
             // Hide the Status and Account Status dropdowns
             document.getElementById('statusDiv').classList.add('hidden');
             document.getElementById('accountStatusDiv').classList.add('hidden');
+            
+            // Update patron type options based on user type
+            const patronTypeSelect = document.getElementById('patronTypeSelect');
+            patronTypeSelect.innerHTML = '<option value="" disabled selected>Choose Patron type</option>';
+            
+            if (userType === 'student') {
+                const studentOptions = [
+                    'student-BSA', 'student-BSCRIM', 'student-BAT', 'student-BSIT',
+                    'student-BTLED', 'student-BEED', 'student-BSF', 'student-BSABE'
+                ];
+                studentOptions.forEach(option => {
+                    const opt = document.createElement('option');
+                    opt.value = option;
+                    opt.textContent = option.replace('student-', '');
+                    patronTypeSelect.appendChild(opt);
+                });
+            } else {
+                const facultyOptions = [
+                    'faculty-Teaching', 'faculty-Non-Teaching', 'faculty-Support Service',
+                    'faculty-Contract of Service', 'faculty-Part-timer', 'faculty-Guard',
+                    'faculty-Casual'
+                ];
+                facultyOptions.forEach(option => {
+                    const opt = document.createElement('option');
+                    opt.value = option;
+                    opt.textContent = option.replace('faculty-', '');
+                    patronTypeSelect.appendChild(opt);
+                });
+            }
             
             // Clear original values when adding new user
             originalValues = {};
@@ -409,9 +509,49 @@ include '../admin_panel/side_nav.php';
             document.getElementById('addUserModal').classList.remove('hidden');
             document.getElementById('addUserModalLabel').textContent = 'Update User';
             document.getElementById('user_id').value = user.user_id;
+            
             // Show the Status and Account Status dropdowns
             document.getElementById('statusDiv').classList.remove('hidden');
             document.getElementById('accountStatusDiv').classList.remove('hidden');
+            
+            // Determine user type based on patron_type
+            currentUserType = user.patron_type.startsWith('student-') ? 'student' : 'faculty';
+            
+            // Update patron type options based on user type
+            const patronTypeSelect = document.getElementById('patronTypeSelect');
+            patronTypeSelect.innerHTML = '<option value="" disabled>Choose Patron type</option>';
+            
+            if (currentUserType === 'student') {
+                const studentOptions = [
+                    'student-BSA', 'student-BSCRIM', 'student-BAT', 'student-BSIT',
+                    'student-BTLED', 'student-BEED', 'student-BSF', 'student-BSABE'
+                ];
+                studentOptions.forEach(option => {
+                    const opt = document.createElement('option');
+                    opt.value = option;
+                    opt.textContent = option.replace('student-', '');
+                    if (option === user.patron_type) {
+                        opt.selected = true;
+                    }
+                    patronTypeSelect.appendChild(opt);
+                });
+            } else {
+                const facultyOptions = [
+                    'faculty-Teaching', 'faculty-Non-Teaching', 'faculty-Support Service',
+                    'faculty-Contract of Service', 'faculty-Part-timer', 'faculty-Guard',
+                    'faculty-Casual'
+                ];
+                facultyOptions.forEach(option => {
+                    const opt = document.createElement('option');
+                    opt.value = option;
+                    opt.textContent = option.replace('faculty-', '');
+                    if (option === user.patron_type) {
+                        opt.selected = true;
+                    }
+                    patronTypeSelect.appendChild(opt);
+                });
+            }
+            
             // Populate other form fields
             const form = document.getElementById('userForm');
             form.first_name.value = user.first_name;
@@ -419,10 +559,10 @@ include '../admin_panel/side_nav.php';
             form.last_name.value = user.last_name;
             form.email.value = user.email;
             form.user_id_input.value = user.user_id;
-            form.patron_type.value = user.patron_type;
-            form.status.value = user.status; // Populate with current status
+            form.status.value = user.status;
             form.address.value = user.address;
-            form.account_status.value = user.account_status; // Populate with current account status
+            form.account_status.value = user.account_status;
+            
             // Set up for updating a user
             document.getElementById('passwordLabel').textContent = 'New Password';
             document.getElementById('confirmPasswordLabel').textContent = 'Confirm New Password';
@@ -469,50 +609,135 @@ include '../admin_panel/side_nav.php';
                 const userId = document.getElementById('user_id').value;
                 const password = userForm.password.value;
                 const confirmPassword = userForm.confirm_password.value;
+                const userType = currentUserType; // Get the current user type (student/faculty)
 
-                // Check if form is in edit mode and has changes
-                if (userId && !document.getElementById('submitButton').disabled) {
-                    if (password !== confirmPassword) {
-                        Swal.fire({
-                            title: 'Error!',
-                            text: 'Passwords do not match!',
-                            icon: 'error'
-                        });
-                        return;
-                    }
-
-                    const formData = new FormData(userForm);
-                    fetch(window.location.href, {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            Swal.fire({
-                                title: 'Success!',
-                                text: data.message,
-                                icon: 'success'
-                            }).then(() => {
-                                window.location.reload();
-                            });
-                        } else {
-                            Swal.fire({
-                                title: 'Error!',
-                                text: data.message,
-                                icon: 'error'
-                            });
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        Swal.fire({
-                            title: 'Error!',
-                            text: 'An error occurred while processing your request.',
-                            icon: 'error'
-                        });
+                // Validate required fields
+                if (!userForm.user_id_input.value || !userForm.first_name.value || 
+                    !userForm.last_name.value || !userForm.email.value || 
+                    !userForm.patron_type.value || !userForm.address.value) {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'Please fill in all required fields!',
+                        icon: 'error'
                     });
+                    return;
                 }
+
+                // Validate email format
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(userForm.email.value)) {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'Please enter a valid email address!',
+                        icon: 'error'
+                    });
+                    return;
+                }
+
+                // For new users, password is required
+                if (!userId && (!password || !confirmPassword)) {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'Password is required for new users!',
+                        icon: 'error'
+                    });
+                    return;
+                }
+
+                // Check if passwords match (only if password is provided)
+                if (password && password !== confirmPassword) {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'Passwords do not match!',
+                        icon: 'error'
+                    });
+                    return;
+                }
+
+                // Validate patron type based on user type
+                const patronType = userForm.patron_type.value;
+                if (userType === 'student' && !patronType.startsWith('student-')) {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'Invalid patron type for student!',
+                        icon: 'error'
+                    });
+                    return;
+                }
+                if (userType === 'faculty' && !patronType.startsWith('faculty-')) {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'Invalid patron type for faculty!',
+                        icon: 'error'
+                    });
+                    return;
+                }
+
+                // If we're in edit mode, check if there are changes
+                if (userId && document.getElementById('submitButton').disabled) {
+                    Swal.fire({
+                        title: 'No Changes',
+                        text: 'No changes were made to update.',
+                        icon: 'info'
+                    });
+                    return;
+                }
+
+                // Show loading state
+                Swal.fire({
+                    title: 'Processing...',
+                    text: 'Please wait while we process your request.',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                const formData = new FormData(userForm);
+                fetch(window.location.href, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            title: 'Success!',
+                            text: data.message,
+                            icon: 'success'
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Error!',
+                            text: data.message,
+                            icon: 'error'
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'An error occurred while processing your request.',
+                        icon: 'error'
+                    });
+                });
+            });
+
+            // Add input validation for user ID
+            const userIdInput = document.querySelector('input[name="user_id_input"]');
+            userIdInput.addEventListener('input', function(e) {
+                // Remove any non-alphanumeric characters
+                this.value = this.value.replace(/[^a-zA-Z0-9]/g, '');
+            });
+
+            // Add input validation for email
+            const emailInput = document.querySelector('input[name="email"]');
+            emailInput.addEventListener('input', function(e) {
+                // Convert to lowercase
+                this.value = this.value.toLowerCase();
             });
         });
     </script>

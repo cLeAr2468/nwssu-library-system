@@ -66,6 +66,12 @@
             <ul class="space-y-2 font-medium">
                 <?php
                 $current_page = basename($_SERVER['PHP_SELF']);
+                $is_catalog_section = in_array($current_page, [
+                    'display_books.php', 
+                    'categories.php', 
+                    'books_detail.php',
+                    'categbooks.php'
+                ]);
                 ?>
                 <li>
                     <a href="../admin_panel/admin_dashboard.php" class="flex items-center p-2 text-gray-300 rounded-lg hover:bg-sidebar-hover group <?= ($current_page == 'admin_dashboard.php') ? 'bg-sidebar-hover' : '' ?>">
@@ -74,20 +80,20 @@
                     </a>
                 </li>
                 <li>
-                    <button type="button" class="flex items-center w-full p-2 text-gray-300 transition duration-75 rounded-lg group hover:bg-sidebar-hover" id="catalog-dropdown-button">
+                    <button type="button" class="flex items-center w-full p-2 text-gray-300 transition duration-75 rounded-lg group hover:bg-sidebar-hover <?= $is_catalog_section ? 'bg-sidebar-hover' : '' ?>" id="catalog-dropdown-button">
                         <i class="bi bi-kanban text-xl"></i>
                         <span class="flex-1 ml-3 text-left whitespace-nowrap">Catalog</span>
                         <i class="lni lni-chevron-down transition-transform duration-200" id="catalog-chevron"></i>
                     </button>
                     <ul id="dropdown-catalog" class="hidden py-2 space-y-2">
                         <li>
-                            <a href="../admin_panel/display_books.php" class="flex items-center w-full p-2 text-gray-300 transition duration-75 rounded-lg pl-11 group hover:bg-sidebar-hover <?= ($current_page == 'display_books.php') ? 'bg-sidebar-active text-white' : '' ?>">
+                            <a href="../admin_panel/display_books.php" class="flex items-center w-full p-2 text-gray-300 transition duration-75 rounded-lg pl-11 group hover:bg-sidebar-hover <?= (in_array($current_page, ['display_books.php', 'books_detail.php'])) ? 'bg-sidebar-active text-white' : '' ?>">
                                 <i class="bi bi-book text-sm mr-2"></i>
                                 Catalog Items
                             </a>
                         </li>
                         <li>
-                            <a href="categories.php" class="flex items-center w-full p-2 text-gray-300 transition duration-75 rounded-lg pl-11 group hover:bg-sidebar-hover <?= ($current_page == 'categories.php') ? 'bg-sidebar-active text-white' : '' ?>">
+                            <a href="categories.php" class="flex items-center w-full p-2 text-gray-300 transition duration-75 rounded-lg pl-11 group hover:bg-sidebar-hover <?= (in_array($current_page, ['categories.php', 'categbooks.php'])) ? 'bg-sidebar-active text-white' : '' ?>">
                                 <i class="bi bi-tags text-sm mr-2"></i>
                                 Categories
                             </a>
@@ -165,7 +171,7 @@
 
         // Keep dropdown open if current page is in the dropdown
         const currentPage = '<?php echo $current_page; ?>';
-        if (currentPage === 'display_books.php' || currentPage === 'categories.php') {
+        if (['display_books.php', 'categories.php', 'books_detail.php', 'categbooks.php'].includes(currentPage)) {
             catalogDropdown.classList.remove('hidden');
             catalogChevron.classList.add('rotate-180');
         }
