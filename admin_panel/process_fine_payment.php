@@ -41,17 +41,18 @@ try {
         throw new Exception('Payment amount exceeds current fine amount');
     }
 
-    // Update fine amount
+    // Update fine amount and set fine_updated column
     $updateFineQuery = $conn->prepare("
         UPDATE borrowed_books 
-        SET fine = fine - ? 
+        SET fine = fine - ?, 
+            fine_updated = NOW()
         WHERE user_id = ? AND book_id = ? AND fine > 0
     ");
     $updateFineQuery->execute([$paymentAmount, $userId, $bookId]);
 
     // Record payment in payment history
     $recordPaymentQuery = $conn->prepare("
-        INSERT INTO payments (user_id, book_id, amount, payment_date) 
+        INSERT INTO pay (user_id, book_id, total_pay, payment_date) 
         VALUES (?, ?, ?, CURRENT_DATE)
     ");
     $recordPaymentQuery->execute([$userId, $bookId, $paymentAmount]);
@@ -72,4 +73,5 @@ try {
         'success' => false,
         'message' => $e->getMessage()
     ]);
-} 
+}
+?>

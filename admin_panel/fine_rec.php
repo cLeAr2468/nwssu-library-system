@@ -174,7 +174,7 @@ include '../admin_panel/side_nav.php';
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                             <button onclick="showPaymentModal('<?= $record['user_id'] ?>', '<?= $record['book_id'] ?>', <?= $record['fine'] ?>)"
                                                     class="text-primary-600 hover:text-primary-900 inline-flex items-center">
-                                                <i class="lni lni-pencil mr-1"></i> Update
+                                                <i class="lni lni-pencil mr-1"></i> Pay
                                             </button>
                                         </td>
                                     </tr>

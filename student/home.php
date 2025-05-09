@@ -3,6 +3,7 @@
 session_start();
 include '../component-library/connect.php';
 include '../student/side_navbars.php';
+include './check_expired_reservations.php';
 // Check if the student is already logged in
 try {
     $conn = new PDO("mysql:host=$db_host;dbname=$db_name", $user_name, $user_password);

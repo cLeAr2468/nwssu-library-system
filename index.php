@@ -1,5 +1,7 @@
 <?php
 session_start();
+include './component-library/connect.php';
+
 ?>
 <!DOCTYPE html>
 <html lang="en">

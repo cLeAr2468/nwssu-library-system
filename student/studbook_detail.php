@@ -68,20 +68,20 @@ try {
                         exit();
                     }
 
-                    // Check if the book was previously borrowed and returned
+                   // Check if the book was previously borrowed and returned
                     $checkPreviousReservationSql = "SELECT * FROM reserve_books 
-                                                   WHERE user_id = :user_id 
-                                                   AND book_id = :book_id 
-                                                   ORDER BY reserved_date DESC 
-                                                   LIMIT 1";
+                    WHERE user_id = :user_id 
+                    AND book_id = :book_id 
+                    ORDER BY reserved_date DESC 
+                    LIMIT 1";
                     $checkPreviousReservationStmt = $conn->prepare($checkPreviousReservationSql);
                     $checkPreviousReservationStmt->execute([':user_id' => $user_id, ':book_id' => $book_id]);
                     $previousReservation = $checkPreviousReservationStmt->fetch(PDO::FETCH_ASSOC);
-
-                    // If there's a previous reservation and it's not returned, don't allow new reservation
-                    if ($previousReservation && $previousReservation['status'] !== 'returned') {
-                        echo json_encode(['success' => false, 'message' => 'Please return your previous reservation first.']);
-                        exit();
+                    // If there's a previous reservation and it's not returned, expired, or canceled, don't allow new reservation
+                    if ($previousReservation && 
+                    !in_array($previousReservation['status'], ['returned', 'expired', 'canceled'])) {
+                    echo json_encode(['success' => false, 'message' => 'Please return your previous reservation first.']);
+                    exit();
                     }
 
                     // Check if the book is available
@@ -124,13 +124,13 @@ try {
                     }
 
                     // Insert reservation record
-                    $sql = "INSERT INTO reserve_books (user_id, book_id, reserved_date, status, copies, expiration_date)
-                            VALUES (:user_id, :book_id, NOW(), 'reserved', 1, :expiration_date)";
+                    $sql = "INSERT INTO reserve_books (user_id, book_id, reserved_date, status, copies, expiration_schedule)
+                            VALUES (:user_id, :book_id, NOW(), 'reserved', 1, :expiration_schedule)";
                     $stmt = $conn->prepare($sql);
                     $stmt->execute([
                         ':user_id' => $user_id,
                         ':book_id' => $book_id,
-                        ':expiration_date' => $expirationDate
+                        ':expiration_schedule' => $expirationDate
                     ]);
                     echo json_encode(['success' => true, 'message' => 'Reservation Successful!']);
                     exit();

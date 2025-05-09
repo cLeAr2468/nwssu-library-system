@@ -97,7 +97,7 @@ $queryBorrowed = "
     FROM borrowed_books rb 
     JOIN user_info ui ON rb.user_id = ui.user_id 
     JOIN books b ON rb.book_id = b.id 
-    WHERE rb.status = 'borrowed'";
+    WHERE rb.status = 'borrowed' OR rb.status = 'overdue'";
 $stmtBorrowed = $conn->prepare($queryBorrowed);
 $stmtBorrowed->execute();
 $borrowedBooks = $stmtBorrowed->fetchAll(PDO::FETCH_ASSOC);
