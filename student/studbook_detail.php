@@ -105,13 +105,32 @@ try {
                     if ($book['copies'] - 1 <= 0) {
                         $conn->prepare("UPDATE books SET status = 'not available' WHERE id = :id")->execute([':id' => $book_id]);
                     }
+                    // Calculate expiration date based on current time
+                    $currentTime = date('H:i:s');
+                    $currentDate = date('Y-m-d');
+                    $tomorrow = date('Y-m-d', strtotime('+1 day'));
+                    
+                    // If current time is after 5 PM, set expiration to next day 5 PM
+                    if ($currentTime > '17:00:00') {
+                        $expirationDate = $tomorrow . ' 17:00:00';
+                    } 
+                    // If current time is before 7 AM, set expiration to today 5 PM
+                    else if ($currentTime < '07:00:00') {
+                        $expirationDate = $currentDate . ' 17:00:00';
+                    }
+                    // If between 7 AM and 5 PM, set expiration to today 5 PM
+                    else {
+                        $expirationDate = $currentDate . ' 17:00:00';
+                    }
+
                     // Insert reservation record
-                    $sql = "INSERT INTO reserve_books (user_id, book_id, reserved_date, status, copies)
-                            VALUES (:user_id, :book_id, NOW(), 'reserved', 1)";
+                    $sql = "INSERT INTO reserve_books (user_id, book_id, reserved_date, status, copies, expiration_date)
+                            VALUES (:user_id, :book_id, NOW(), 'reserved', 1, :expiration_date)";
                     $stmt = $conn->prepare($sql);
                     $stmt->execute([
                         ':user_id' => $user_id,
                         ':book_id' => $book_id,
+                        ':expiration_date' => $expirationDate
                     ]);
                     echo json_encode(['success' => true, 'message' => 'Reservation Successful!']);
                     exit();
@@ -183,7 +202,8 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Book Details: <?php echo htmlspecialchars($book['title'] ?? 'Not Found'); ?></title>
+    <title>Book Details: <?php echo htmlspecialchars($book['title'] ?? 'Not Found'); ?></title> 
+    <link rel="icon" type="image/png" href="./images/logo.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>

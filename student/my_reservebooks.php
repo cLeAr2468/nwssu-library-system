@@ -82,10 +82,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancelReservation']) 
 
 // Fetch reserved books for the student
 $reservedBooksQuery = $conn->prepare("
-    SELECT rb.*, b.title, b.books_image, b.author, b.publisher, b.copyright, b.category, b.ISBN, b.id as book_id 
+    SELECT rb.*, b.title, b.books_image, b.author, b.publisher, b.copyright, b.category, b.ISBN, b.id as book_id,
+           CASE 
+               WHEN DATE(rb.expiration_date) = CURDATE() THEN 
+                   CASE 
+                       WHEN TIME(rb.expiration_date) <= '17:00:00' THEN 
+                           TIMESTAMPDIFF(HOUR, NOW(), rb.expiration_date)
+                       ELSE 24
+                   END
+               ELSE 24
+           END as hours_remaining,
+           DATE_FORMAT(rb.expiration_date, '%Y-%m-%d %h:%i %p') as formatted_expiration
     FROM reserve_books rb 
     JOIN books b ON rb.book_id = b.id 
-    WHERE rb.user_id = ? AND rb.status = 'reserved'  -- Ensure you're checking for the correct reserved status
+    WHERE rb.user_id = ? AND rb.status = 'reserved'
 ");
 $reservedBooksQuery->execute([$user_id]);
 $reservedBooks = $reservedBooksQuery->fetchAll(PDO::FETCH_ASSOC);
@@ -171,9 +181,16 @@ $totalReservedBooks = count($reservedBooks);
                                             <?php echo htmlspecialchars($book['publisher']); ?>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full <?php 
+                                                echo $book['hours_remaining'] <= 24 ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'; 
+                                            ?>">
                                                 <?php echo htmlspecialchars($book['status']); ?>
                                             </span>
+                                            <?php if ($book['hours_remaining'] <= 24): ?>
+                                                <div class="text-xs text-yellow-600 mt-1">
+                                                    Expires: <?php echo $book['formatted_expiration']; ?>
+                                                </div>
+                                            <?php endif; ?>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                             <?php echo htmlspecialchars($book['copies']); ?>
@@ -234,13 +251,26 @@ $totalReservedBooks = count($reservedBooks);
                                                 </span>
                                             </div>
                                             <p class="text-xs text-gray-500 mt-2">Reserved: <?php echo htmlspecialchars($book['reserved_date']); ?></p>
-                                            <div class="mt-2">
-                                                <form class="cancel-form" method="POST" action="">
-                                                    <input type="hidden" name="cancelReservation" value="<?php echo htmlspecialchars($book['book_id']); ?>">
-                                                    <button type="button" class="cancel-btn text-red-600 hover:text-red-900 bg-red-100 hover:bg-red-200 px-3 py-1 rounded-full text-xs transition duration-150 ease-in-out">
-                                                        Cancel Reservation
-                                                    </button>
-                                                </form>
+                                            <div class="mt-2 space-y-2">
+                                                <div class="flex items-center justify-between">
+                                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full <?php 
+                                                        echo $book['hours_remaining'] <= 24 ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'; 
+                                                    ?>">
+                                                    </span>
+                                                </div>
+                                                <div class="flex items-center justify-between gap-2">
+                                                    <?php if ($book['hours_remaining'] <= 24): ?>
+                                                        <span class="text-xs text-yellow-600 flex-1">
+                                                            Expires: <?php echo $book['formatted_expiration']; ?>
+                                                        </span>
+                                                    <?php endif; ?>
+                                                    <form class="cancel-form flex-1" method="POST" action="">
+                                                        <input type="hidden" name="cancelReservation" value="<?php echo htmlspecialchars($book['book_id']); ?>">
+                                                        <button type="button" class="w-full cancel-btn text-white bg-red-500 hover:bg-red-600 px-3 py-1.5 rounded-full text-xs transition duration-150 ease-in-out">
+                                                            Cancel
+                                                        </button>
+                                                    </form>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>

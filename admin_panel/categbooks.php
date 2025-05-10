@@ -33,6 +33,7 @@ $categories_query = $conn->query("SELECT DISTINCT category FROM books");
 $categories = $categories_query->fetchAll(PDO::FETCH_COLUMN);
 ?>
 <!DOCTYPE html>
+<link rel="icon" type="image/png" href="../images/logo.png">
 <html lang="en">
 <head>
     <meta charset="UTF-8">

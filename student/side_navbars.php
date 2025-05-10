@@ -192,7 +192,7 @@ if (isset($_POST['logout'])) {
                                 About <i class="fas fa-chevron-down ml-1 text-xs"></i>
                             </a>
                             <ul class="absolute left-0 mt-0 w-48 bg-white shadow-lg py-1 z-10 hidden group-hover:block">
-                                <li><a href="./missionvission" class="block px-4 py-2 hover:bg-blue-500 hover:text-white transition text-black">Mission & Vision</a></li>
+                                <li><a href="./missionvission" class="block px-4 py-2 hover:bg-blue-500 hover:text-white transition text-black">Vision & Mission</a></li>
                             </ul>
                         </li>
                         <li class="relative group">

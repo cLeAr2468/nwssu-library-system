@@ -121,15 +121,15 @@ if (isset($data['action'])) {
                 exit;
             }
 
-            // Check if user has any overdue books
-            $checkOverdueQuery = "SELECT COUNT(*) as overdue_count FROM borrowed_books 
-                                 WHERE user_id = ? AND status = 'overdue'";
-            $stmtCheckOverdue = $conn->prepare($checkOverdueQuery);
-            $stmtCheckOverdue->execute([$userId]);
-            $overdueCount = $stmtCheckOverdue->fetchColumn();
+            // Check if user has reached the 3-book limit
+            $checkBorrowedLimitQuery = "SELECT COUNT(*) as borrowed_count FROM borrowed_books 
+                                      WHERE user_id = ? AND (status = 'borrowed' OR status = 'overdue')";
+            $stmtCheckBorrowedLimit = $conn->prepare($checkBorrowedLimitQuery);
+            $stmtCheckBorrowedLimit->execute([$userId]);
+            $borrowedCount = $stmtCheckBorrowedLimit->fetchColumn();
             
-            if ($overdueCount > 0) {
-                echo json_encode(['success' => false, 'message' => 'This user has overdue books. Please return them first.']);
+            if ($borrowedCount >= 3) {
+                echo json_encode(['success' => false, 'message' => 'This user has reached the maximum limit of 3 books (including overdue books).']);
                 exit;
             }
 
@@ -711,6 +711,16 @@ if (isset($data['action'])) {
                 confirmButtonText: 'Yes, check out!'
             }).then((result) => {
                 if (result.isConfirmed) {
+                    // Show loading state
+                    Swal.fire({
+                        title: 'Processing...',
+                        text: 'Please wait while we process your request.',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
                     const data = {
                         action: 'checkout',
                         user_id: userId,
@@ -734,15 +744,35 @@ if (isset($data['action'])) {
                             );
                             location.reload(); // Reload the page to see updated data
                         } else {
+                            // Check for specific error messages
+                            let errorTitle = 'Error!';
+                            let errorIcon = 'error';
+                            
+                            if (data.message.includes('maximum limit')) {
+                                errorTitle = 'Book Limit Reached!';
+                                errorIcon = 'warning';
+                            } else if (data.message.includes('already borrowed')) {
+                                errorTitle = 'Already Borrowed!';
+                                errorIcon = 'info';
+                            } else if (data.message.includes('inactive')) {
+                                errorTitle = 'Inactive Account!';
+                                errorIcon = 'warning';
+                            }
+                            
                             Swal.fire(
-                                'Error!',
+                                errorTitle,
                                 data.message,
-                                'error'
+                                errorIcon
                             );
                         }
                     })
                     .catch((error) => {
                         console.error('Error:', error);
+                        Swal.fire(
+                            'Error!',
+                            'An error occurred while processing your request.',
+                            'error'
+                        );
                     });
                 }
             });

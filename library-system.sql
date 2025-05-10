@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 07, 2025 at 01:48 PM
+-- Generation Time: May 08, 2025 at 07:44 AM
 -- Server version: 10.1.37-MariaDB
 -- PHP Version: 7.3.1
 
@@ -36,6 +36,38 @@ CREATE TABLE `activities` (
   `activity_date` varchar(250) NOT NULL,
   `status` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `activities`
+--
+
+INSERT INTO `activities` (`activity_id`, `user_id`, `activity_type`, `activity_details`, `activity_date`, `status`) VALUES
+(1, '21-SJ00126', 'login', 'User logged in successfully', '2025-05-07 13:58:15', 'active'),
+(2, '21-SJ00126', 'click', 'User accessed Book Catalog page', '2025-05-07 13:58:18', 'active'),
+(3, '21-SJ00126', 'View Books', 'Environmental Management', '2025-05-07 13:58:25', 'active'),
+(4, '21-SJ00126', 'View Books', 'Domestic TOURISM', '2025-05-07 13:58:54', 'active'),
+(5, '21-SJ00126', 'View Books', 'Environmental Management', '2025-05-07 13:59:04', 'active'),
+(6, '21-SJ00126', 'reservation', 'Reserved book: Environmental Management', '2025-05-07 13:59:45', 'active'),
+(7, '21-SJ00126', 'click', 'User accessed Book Catalog page', '2025-05-07 13:59:50', 'active'),
+(8, '21-SJ00126', 'View Books', 'Domestic TOURISM', '2025-05-07 13:59:53', 'active'),
+(9, '21-SJ00126', 'logout', 'User signed out of the system', '2025-05-07 14:00:04', 'active'),
+(10, '12345', 'login', 'User logged in successfully', '2025-05-07 14:00:51', 'active'),
+(11, '12345', 'click', 'User accessed Book Catalog page', '2025-05-07 14:00:58', 'active'),
+(12, '12345', 'View Books', 'MultiCultural management', '2025-05-07 14:01:02', 'active'),
+(13, '12345', 'View Books', 'Domestic TOURISM', '2025-05-07 14:01:08', 'active'),
+(14, '12345', 'View Books', 'MultiCultural management', '2025-05-07 14:01:14', 'active'),
+(15, '12345', 'reservation', 'Reserved book: MultiCultural management', '2025-05-07 14:01:18', 'active'),
+(16, '12345', 'click', 'User accessed Book Catalog page', '2025-05-07 14:27:46', 'active'),
+(17, '12345', 'View Books', 'Domestic TOURISM', '2025-05-07 14:28:53', 'active'),
+(18, '12345', 'View Books', 'Environmental Management', '2025-05-07 14:29:05', 'active'),
+(19, '21-SJ00126', 'login', 'User logged in successfully', '2025-05-08 13:46:22', 'active'),
+(20, '21-SJ00126', 'click', 'User accessed Book Catalog page', '2025-05-08 06:59:45', 'active'),
+(21, '21-SJ00126', 'click', 'User accessed Book Catalog page', '2025-05-08 07:29:44', 'active'),
+(22, '21-SJ00126', 'click', 'User accessed top_collection page', '2025-05-08 07:29:45', 'active'),
+(23, '21-SJ00126', 'click', 'User accessed new_collection page', '2025-05-08 07:29:47', 'active'),
+(24, '21-SJ00126', 'click', 'User accessed top_collection page', '2025-05-08 07:29:54', 'active'),
+(25, '21-SJ00126', 'View Books', 'the science', '2025-05-08 07:29:56', 'active'),
+(26, '21-SJ00126', 'click', 'User accessed Home page', '2025-05-08 07:30:51', 'active');
 
 -- --------------------------------------------------------
 
@@ -95,11 +127,11 @@ CREATE TABLE `books` (
 
 INSERT INTO `books` (`id`, `material_type`, `sub_type`, `category`, `title`, `author`, `publisher`, `status`, `subject`, `content`, `summary`, `issn`, `call_no`, `ISBN`, `copyright`, `page_number`, `edition`, `copies`, `date_acquired`, `books_image`, `catalog_date`) VALUES
 (1, 'Book', 'Others', 'BSF', 'MultiCultural management', 'FARID ELASHMAWI et al', 'National Book Store', 'available', 'Programming', 'aaaaa', 'aaaaa', '00000', '658 E37', '9831363825', '000000', 234, 'N/A', 3, '2025-03-27', NULL, '2025-04-02'),
-(2, 'Journal', 'Others', 'BSF', 'The Philippines Recommends for Watershed Management', 'Dr. Vicente P. Veracion et al', 'DOST', 'available', 'Animal Science, Agriculture', 'd', 'd', '1157787', '658 P364 1991', '9712001822', '00000', 88, 'N/A', 8, '2025-03-27', NULL, '2025-04-02'),
+(2, 'Journal', 'Others', 'BSF', 'The Philippines Recommends for Watershed Management', 'Dr. Vicente P. Veracion et al', 'DOST', 'available', 'Animal Science, Agriculture', 'd', 'd', '1157787', '658 P364 1991', '9712001822', '00000', 88, 'N/A', 10, '2025-03-27', NULL, '2025-04-02'),
 (3, 'Book', 'Others', 'BSF', 'Environmental Management', 'Dr. Swapan C Deb', 'JAICO BOOKS', 'available', 'Animal Science, Agriculture', 'ds', 'ds', '000000', '658.4 D299 2003', '8179921344', '000000', 243, 'N/A', 1, '2025-03-27', NULL, '2025-04-08'),
 (4, 'Book', 'Others', 'BSF', 'TOURISM Planning and Development', 'Zenaida Lansangan Cruz, Ph.D.', 'National Book Store', 'available', 'Animal Science, Agriculture', 's', 's', '00000', '790 O111 2011', '9710870424', '000000', 145, 'N/A', 1, '2025-03-27', NULL, '2025-04-02'),
 (5, 'Book', 'Others', 'BSF', 'Ornamental Horticulture and Landscape Gardening', 'Dr. Mahesh Kumar', 'RANDOM PUBLICATIONS LLP', 'available', 'Animal Science, Agriculture', 'a', 'a', '00000', '712 K95 2022', '9789393884527', '000000', 306, 'N/A', 4, '2025-03-27', NULL, '2025-04-02'),
-(10, 'E-Book', 'Others', 'BSF', 'Domestic TOURISM', 'Carlos M. Libosada, Jr.', 'ANVIL PIBLISHING, INC.', 'available', 'Animal Science, Agriculture', 's', 's', '00000', '790 L11 2003', '9712713989', '000000', 214, 'N/A', 2, '2025-03-27', '../uploaded_file/bgss.png', '2025-05-07'),
+(10, 'E-Book', 'Others', 'BSF', 'Domestic TOURISM', 'Carlos M. Libosada, Jr.', 'ANVIL PIBLISHING, INC.', 'available', 'Animal Science, Agriculture', 's', 's', '00000', '790 L11 2003', '9712713989', '000000', 214, 'N/A', 3, '2025-03-27', '../uploaded_file/bgss.png', '2025-05-07'),
 (11, 'E-Book', 'Fiction', 'BSA-Animal Science', 'the science', 'Carlos M. Libosada, Jr.', 'ANVIL PIBLISHING, INC.', 'available', 'Animal Science, Agriculture', 's', 's', '00000', '790 L11 2003', '0000', '00000', 276, 'N/A', 5, '2025-04-08', NULL, '2025-04-08'),
 (13, 'Unpublished Material', 'Thesis', 'BSIT', 'Pig Feeder', 'Mark Francis', 'Molleda Fam', 'available', 'Programming', 'de', 'da', '11111', '11111', '111111', '2025', 276, 'N/A', 1, '2025-04-25', '67f4f161f20f5_2.png', '2025-04-10');
 
@@ -114,8 +146,8 @@ CREATE TABLE `borrowed_books` (
   `book_id` varchar(50) NOT NULL,
   `copies` int(50) NOT NULL,
   `status` varchar(50) NOT NULL,
-  `return_sched` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-  `borrowed_date` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `return_sched` datetime(1) NOT NULL DEFAULT CURRENT_TIMESTAMP(1),
+  `borrowed_date` datetime(1) NOT NULL DEFAULT CURRENT_TIMESTAMP(1),
   `fine` int(50) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -124,8 +156,10 @@ CREATE TABLE `borrowed_books` (
 --
 
 INSERT INTO `borrowed_books` (`user_id`, `book_id`, `copies`, `status`, `return_sched`, `borrowed_date`, `fine`) VALUES
-('21-SJ00127', '2', 1, 'returned', '2025-05-08 00:00:00.000000', '2025-05-07 00:00:00.000000', NULL),
-('123', '2', 1, 'borrowed', '2025-05-08 00:00:00.000000', '2025-05-07 00:00:00.000000', NULL);
+('21-SJ00126', '2', 1, 'returned', '2025-05-09 07:25:50.0', '2025-05-08 13:25:50.2', NULL),
+('21-SJ00126', '2', 1, 'borrowed', '2025-05-09 07:33:57.0', '2025-05-08 13:33:57.8', NULL),
+('21-SJ00126', '3', 1, 'borrowed', '2025-05-09 07:34:12.0', '2025-05-08 13:34:12.1', NULL),
+('21-SJ00126', '5', 1, 'borrowed', '2025-05-09 07:34:32.0', '2025-05-08 13:34:32.1', NULL);
 
 -- --------------------------------------------------------
 
@@ -149,10 +183,11 @@ CREATE TABLE `pay` (
 CREATE TABLE `reserve_books` (
   `user_id` varchar(50) NOT NULL,
   `book_id` int(50) NOT NULL,
-  `reserved_date` varchar(50) NOT NULL,
+  `reserved_date` datetime(1) NOT NULL DEFAULT CURRENT_TIMESTAMP(1),
   `status` varchar(50) NOT NULL,
   `copies` int(50) NOT NULL,
-  `cancel_date` varchar(50) DEFAULT NULL
+  `cancel_date` varchar(50) DEFAULT NULL,
+  `expiration_date` datetime(1) NOT NULL DEFAULT CURRENT_TIMESTAMP(1)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
@@ -166,7 +201,7 @@ CREATE TABLE `return_books` (
   `book_id` int(50) NOT NULL,
   `copies` int(50) NOT NULL,
   `status` varchar(50) NOT NULL,
-  `return_date` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6)
+  `return_date` datetime(1) NOT NULL DEFAULT CURRENT_TIMESTAMP(1)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
@@ -174,7 +209,7 @@ CREATE TABLE `return_books` (
 --
 
 INSERT INTO `return_books` (`user_id`, `book_id`, `copies`, `status`, `return_date`) VALUES
-('21-SJ00127', 2, 1, 'returned', '2025-05-07 00:00:00.000000');
+('21-SJ00126', 2, 1, 'returned', '2025-05-08 13:26:24.8');
 
 -- --------------------------------------------------------
 
@@ -274,7 +309,7 @@ ALTER TABLE `user_info`
 -- AUTO_INCREMENT for table `activities`
 --
 ALTER TABLE `activities`
-  MODIFY `activity_id` int(50) NOT NULL AUTO_INCREMENT;
+  MODIFY `activity_id` int(50) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
 
 --
 -- AUTO_INCREMENT for table `announcement`
