@@ -1,6 +1,5 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    RewriteBase /nwssu-library-system/
 
     # Allow direct access to actual files and directories
     RewriteCond %{REQUEST_FILENAME} !-f
@@ -17,7 +16,6 @@
     RewriteRule ^missionvission/?$ student/Mission_VIsion.php [L,QSA]
     RewriteRule ^allcategories/?$ student/category_books.php [L,QSA]
 
-
     RewriteRule ^activity_logs/([^/]+)/?$ student/activity_logs.php?category=$1 [L,QSA]
     RewriteRule ^activity_logs/?$ student/activity_logger.php [L,QSA]
 
@@ -31,6 +29,8 @@
     RewriteRule ^allauthor/?$ student/author.php [L,QSA]
     RewriteRule ^author/([^/]+)/?$ student/selected_author.php?author=$1 [L,QSA]
     RewriteRule ^author/?$ student/selected_author.php [L,QSA]
+
+    RewriteRule ^history/?$ student/history_rec.php [L,QSA]
 
     # Publisher URL rewriting
     RewriteRule ^publisher/([^/]+)/?$ student/publisher_browse.php?publisher=$1 [L,QSA]

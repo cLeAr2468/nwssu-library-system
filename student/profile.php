@@ -37,9 +37,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['profile_image'])) {
     $fileName = uniqid() . '-' . basename($_FILES["profile_image"]["name"]); // Unique file name
     $targetFilePath = $targetDir . $fileName;
     $fileType = strtolower(pathinfo($targetFilePath, PATHINFO_EXTENSION));
+    
+    // Check if user is on mobile device
+    $isMobile = preg_match("/(android|avantgo|blackberry|bolt|boost|cricket|docomo|fone|hiptop|mini|mobi|palm|phone|pie|tablet|up\.browser|up\.link|webos|wos)/i", $_SERVER["HTTP_USER_AGENT"]);
+    
     // Allow certain file formats
     $allowedTypes = ['jpg', 'jpeg', 'png', 'gif'];
-    if (in_array($fileType, $allowedTypes) && $_FILES["profile_image"]["size"] <= 5000000) { // Limit file size to 5MB
+    $maxFileSize = $isMobile ? 8000000 : 3000000; // 8MB for mobile, 3MB for desktop
+    
+    if (in_array($fileType, $allowedTypes) && $_FILES["profile_image"]["size"] <= $maxFileSize) {
         // Upload file to server
         if (move_uploaded_file($_FILES["profile_image"]["tmp_name"], $targetFilePath)) {
             // Update the database with the new image path
@@ -59,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['profile_image'])) {
             $message_type = "error";
         }
     } else {
-        $message = "Sorry, only JPG, JPEG, PNG, and GIF files are allowed, and the file size must be less than 5MB.";
+        $message = "Sorry, only JPG, JPEG, PNG, and GIF files are allowed, and the file size must be less than " . ($isMobile ? "8MB" : "3MB") . ".";
         $message_type = "error";
     }
     // Redirect to avoid resubmission on refresh
@@ -195,7 +201,7 @@ function fetchBookCount($conn, $user_id, $status) {
                     </div>
                     <!-- Transaction History Button -->
                     <div class="mt-6">
-                        <a href="history_rec.php?student_id=<?php echo urlencode($user_id); ?>" 
+                        <a href="./history?student_id=<?php echo urlencode($user_id); ?>" 
                            class="w-full bg-secondary hover:bg-gray-900 text-white py-2 px-4 rounded-lg flex items-center justify-center transition-colors duration-200">
                             <i class="fas fa-history mr-2"></i>
                             View Transaction History
@@ -211,6 +217,11 @@ function fetchBookCount($conn, $user_id, $status) {
     // Store the original image source
     const originalImageSrc = document.getElementById("studentImage").src;
     
+    // Function to detect mobile device
+    function isMobileDevice() {
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    }
+    
     // Image upload handling
     document.getElementById("imageContainer").addEventListener("click", function() {
         document.getElementById("fileInput").click();
@@ -219,11 +230,12 @@ function fetchBookCount($conn, $user_id, $status) {
     document.getElementById("fileInput").addEventListener("change", function(event) {
         var file = event.target.files[0];
         if (file) {
-            // Check file size (5MB limit)
-            if (file.size > 5000000) {
+            // Check file size based on device type
+            const maxSize = isMobileDevice() ? 8000000 : 3000000; // 8MB for mobile, 3MB for desktop
+            if (file.size > maxSize) {
                 Swal.fire({
                     title: 'File Too Large',
-                    text: 'Please select an image smaller than 5MB',
+                    text: `Please select an image smaller than ${isMobileDevice() ? '8MB' : '3MB'}`,
                     icon: 'error',
                     confirmButtonText: 'OK',
                     confirmButtonColor: '#d33'
