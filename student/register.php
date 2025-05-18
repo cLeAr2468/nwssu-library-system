@@ -11,10 +11,22 @@ include "../student/register_function.php";
   <link href="/src/output.css" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="min-h-screen flex items-center justify-center bg-teal-500">
+<script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#186030',
+                        secondary: '#333333',
+                    }
+                }
+            }
+        }
+    </script>
+<body class="min-h-screen flex items-center justify-center bg-primary">
   <div class="w-full max-w-4xl p-8 bg-white rounded-md shadow-lg">
     <h3 class="text-4xl text-center font-bold mb-8">
-      <span class="text-black">Create</span> <span class="text-teal-600">Account!</span>
+      <span class="text-black">Create</span> <span class="text-primary">Account!</span>
     </h3>
     <form action="" method="post" enctype="multipart/form-data" class="register">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -80,14 +92,14 @@ include "../student/register_function.php";
       </div>
       <div class="text-center">
         <button type="submit" name="submit"
-          class="w-full px-4 py-2 font-bold text-white bg-teal-500 rounded-full hover:bg-teal-600 focus:outline-none focus:shadow-outline">
+          class="w-full px-4 py-2 font-bold text-white bg-primary rounded-full hover:bg-primary/95 focus:outline-none focus:shadow-outline">
           Register Account
         </button>
       </div>
       <hr class="my-6 border-t" />
       <div class="text-center">
         <a class="inline text-lg text-black" href="./index.html">Already have an account?</a>
-        <a class="inline text-lg text-teal-500 hover:underline ml-1" href="./login"><strong>Login!</strong></a>
+        <a class="inline text-lg text-primary hover:underline ml-1" href="./login"><strong>Login!</strong></a>
       </div>
     </form>
   </div>

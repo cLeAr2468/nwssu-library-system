@@ -116,7 +116,8 @@ $total_pages = ceil($total_books / $books_per_page);
                     colors: {
                         primary: {
                             DEFAULT: 'rgb(3, 163, 3)',
-                            hover: 'rgb(2, 143, 2)'
+                            hover: 'rgb(2, 143, 2)',
+                            tertiary: '#186030'
                         }
                     }
                 }
@@ -157,9 +158,9 @@ $total_pages = ceil($total_books / $books_per_page);
                     <div class="flex flex-col w-full md:w-auto gap-3">
                         <!-- Category buttons -->
                         <div class="hidden md:block md:flex flex-wrap gap-2">
-                            <a href="./allcategories" class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-primary-hover transition-colors">Categories</a>
-                            <a href="./allauthor" class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-primary-hover transition-colors">Author</a>
-                            <a href="./allpublisher" class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-primary-hover transition-colors">Publisher</a>
+                            <a href="./allcategories" class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-600/95 transition-colors">Categories</a>
+                            <a href="./allauthor" class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-600/95 transition-colors">Author</a>
+                            <a href="./allpublisher" class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-600/95 transition-colors">Publisher</a>
                         </div>
                         <!-- Search form -->
                         <form id="searchForm" class="relative flex flex-col sm:flex-row gap-2 w-full md:w-auto" method="GET" action="">
@@ -206,12 +207,12 @@ $total_pages = ceil($total_books / $books_per_page);
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead>
                             <tr>
-                                <th class="px-4 py-3 bg-primary text-white text-left text-xs font-medium uppercase tracking-wider w-24"></th>
-                                <th class="px-4 py-3 bg-primary text-white text-left text-xs font-medium uppercase tracking-wider">Title</th>
-                                <th class="px-4 py-3 bg-primary text-white text-left text-xs font-medium uppercase tracking-wider">Authors/Editors</th>
-                                <th class="px-4 py-3 bg-primary text-white text-left text-xs font-medium uppercase tracking-wider">Publisher</th>
-                                <th class="px-4 py-3 bg-primary text-white text-left text-xs font-medium uppercase tracking-wider">Status</th>
-                                <th class="px-4 py-3 bg-primary text-white text-left text-xs font-medium uppercase tracking-wider">Copies</th>
+                                <th class="px-4 py-3 bg-tertiary text-white text-left text-xs font-medium uppercase tracking-wider w-24"></th>
+                                <th class="px-4 py-3 bg-tertiary text-white text-left text-xs font-medium uppercase tracking-wider">Title</th>
+                                <th class="px-4 py-3 bg-tertiary text-white text-left text-xs font-medium uppercase tracking-wider">Authors/Editors</th>
+                                <th class="px-4 py-3 bg-tertiary text-white text-left text-xs font-medium uppercase tracking-wider">Publisher</th>
+                                <th class="px-4 py-3 bg-tertiary text-white text-left text-xs font-medium uppercase tracking-wider">Status</th>
+                                <th class="px-4 py-3 bg-tertiary text-white text-left text-xs font-medium uppercase tracking-wider">Copies</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200" id="bookTable">

@@ -22,6 +22,19 @@ $publisher = $publish->fetchAll(PDO::FETCH_ASSOC);
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> <!-- Include SweetAlert -->
 </head>
+<script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#00a000',
+                        secondary: '#333333',
+                        tertiary: '#186030'
+                    }
+                }
+            }
+        }
+    </script>
 <body>
     <div class="container mx-auto px-[5%] my-8">
         <div class="bg-white rounded-lg shadow-md p-6 border border-gray-200 ">
@@ -35,7 +48,7 @@ $publisher = $publish->fetchAll(PDO::FETCH_ASSOC);
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead>
-                        <tr class="bg-primary text-white">
+                        <tr class="bg-tertiary text-white">
                             <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Publisher</th>
                             <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Item(s)</th>
                             <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Action</th>

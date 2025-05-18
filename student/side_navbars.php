@@ -139,6 +139,7 @@ if (isset($_POST['logout'])) {
                     colors: {
                         primary: '#00a000',
                         secondary: '#333333',
+                        tertiary: '#186030',
                     }
                 }
             }
@@ -174,14 +175,14 @@ if (isset($_POST['logout'])) {
         </div>
     </header>
     <!-- Navigation -->
-    <nav class="bg-primary text-white font-bold">
+    <nav class="bg-tertiary text-white font-bold">
         <div class="container mx-auto justify-content-center">
             <div class="flex flex-wrap lg:justify-center lg:items-center">
                 <!-- Mobile Menu Button -->
                 <button class="lg:hidden py-3 ml-[8%] text-white text-lg" id="mobile-menu-button">
                     <i class="fas fa-bars"></i>
                 </button>
-                <div class="hidden md:hidden lg:block text-black lg:bg-primary lg:text-white md:flex w-full md:w-auto" id="mobile-menu">
+                <div class="hidden md:hidden lg:block text-black lg:bg-tertiary lg:text-white md:flex w-full md:w-auto" id="mobile-menu">
                     <ul class="flex flex-col md:flex-row">
                         <li><a href="./home" class="block py-3 px-4 hover:bg-green-600 transition" onclick="logNavigation('home')">Home</a></li>
                         <li><a href="./catalogs" class="block py-3 px-4 hover:bg-green-600 transition" onclick="logNavigation('catalog')">Catalog</a></li>

@@ -40,7 +40,19 @@ $publishers = $publishers_query->fetchAll(PDO::FETCH_COLUMN);
     <title>Publishers</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-
+<script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#00a000',
+                        secondary: '#333333',
+                        tertiary: '#186030'
+                    }
+                }
+            }
+        }
+    </script>
 <body>
     <div class="container mx-auto px-[5%] py-8 max-w-7xl">
         <div class="bg-white rounded-lg shadow-md">
@@ -68,12 +80,12 @@ $publishers = $publishers_query->fetchAll(PDO::FETCH_COLUMN);
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead>
                             <tr>
-                                <th class="px-4 py-3 bg-primary text-white text-left text-xs font-medium uppercase tracking-wider w-24"></th>
-                                <th class="px-4 py-3 bg-primary text-white text-left text-xs font-medium uppercase tracking-wider">Title</th>
-                                <th class="px-4 py-3 bg-primary text-white text-left text-xs font-medium uppercase tracking-wider">Authors/Editors</th>
-                                <th class="px-4 py-3 bg-primary text-white text-left text-xs font-medium uppercase tracking-wider">Publisher</th>
-                                <th class="px-4 py-3 bg-primary text-white text-left text-xs font-medium uppercase tracking-wider">Status</th>
-                                <th class="px-4 py-3 bg-primary text-white text-left text-xs font-medium uppercase tracking-wider">Copies</th>
+                                <th class="px-4 py-3 bg-tertiary text-white text-left text-xs font-medium uppercase tracking-wider w-24"></th>
+                                <th class="px-4 py-3 bg-tertiary text-white text-left text-xs font-medium uppercase tracking-wider">Title</th>
+                                <th class="px-4 py-3 bg-tertiary text-white text-left text-xs font-medium uppercase tracking-wider">Authors/Editors</th>
+                                <th class="px-4 py-3 bg-tertiary text-white text-left text-xs font-medium uppercase tracking-wider">Publisher</th>
+                                <th class="px-4 py-3 bg-tertiary text-white text-left text-xs font-medium uppercase tracking-wider">Status</th>
+                                <th class="px-4 py-3 bg-tertiary text-white text-left text-xs font-medium uppercase tracking-wider">Copies</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200" id="bookTable">

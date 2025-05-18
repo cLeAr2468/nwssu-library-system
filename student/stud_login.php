@@ -62,23 +62,14 @@ if (isset($_POST['submit'])) {
     <title>Library Management System - Login</title>
     <link rel="icon" type="image/png" href="../library-system/images/logo.png">
     <script src="https://cdn.tailwindcss.com"></script>
+
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        teal: {
-                            50: '#f0fdfa',
-                            100: '#ccfbf1',
-                            200: '#99f6e4',
-                            300: '#5eead4',
-                            400: '#2dd4bf',
-                            500: '#14b8a6',
-                            600: '#0d9488',
-                            700: '#0f766e',
-                            800: '#115e59',
-                            900: '#134e4a',
-                        }
+                        primary: '#186030',
+                        secondary: '#333333',
                     }
                 }
             }
@@ -108,7 +99,7 @@ if (isset($_POST['submit'])) {
             <div class="w-full max-w-md bg-white rounded-xl p-6 md:p-8 shadow-lg">
                 <div class="flex flex-col items-center mb-6">
                     <h2 class="font-bold text-2xl md:text-3xl text-center">
-                        Login <span class="text-teal-600">Account</span>
+                        Login <span class="text-primary">Account</span>
                     </h2>
                     <p class="text-gray-500 mt-2 text-center">
                         Enter your credentials to access your account
@@ -139,7 +130,7 @@ if (isset($_POST['submit'])) {
                             </label>
                             <a 
                                 href="../library-system/auth/recovery-password.php" 
-                                class="text-sm text-teal-600 hover:text-teal-800 hover:underline"
+                                class="text-sm text-primary hover:text-primary/95 hover:underline"
                             >
                                 Forgot password?
                             </a>
@@ -175,7 +166,7 @@ if (isset($_POST['submit'])) {
                     <button
                         type="submit"
                         name="submit"
-                        class="w-full h-11 mt-6 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg text-base transition-colors duration-200 ease-in-out"
+                        class="w-full h-11 mt-6 bg-primary hover:bg-primary/95 text-white font-medium rounded-lg text-base transition-colors duration-200 ease-in-out"
                     >
                         Log In
                     </button>
@@ -184,7 +175,7 @@ if (isset($_POST['submit'])) {
                 <div class="mt-6 text-center">
                     <p class="text-gray-600">
                         Don't have an account?
-                        <a href="./register" class="text-teal-600 hover:text-teal-800 hover:underline font-medium ml-1">
+                        <a href="./register" class="text-primary hover:text-primary/95 hover:underline font-medium ml-1">
                             Create account
                         </a>
                     </p>
@@ -193,7 +184,7 @@ if (isset($_POST['submit'])) {
         </div>
         
         <!-- Right section: Welcome Message -->
-        <div class="flex flex-col items-center justify-center bg-teal-600 text-white p-8 order-1 md:order-2">
+        <div class="flex flex-col items-center justify-center bg-primary text-white p-8 order-1 md:order-2">
             <div class="max-w-md text-center">
                 <div class="mb-6 flex justify-center">
                     <div class="bg-white p-4 rounded-full">
@@ -201,7 +192,7 @@ if (isset($_POST['submit'])) {
                         <?php if (file_exists("../library-system/images/logo.png")): ?>
                             <img src="../library-system/images/logo.png" alt="Library Logo" class="h-12 w-12">
                         <?php else: ?>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-teal-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary">
                                 <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
                                 <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
                             </svg>
