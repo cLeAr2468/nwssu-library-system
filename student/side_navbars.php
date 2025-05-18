@@ -159,7 +159,9 @@ if (isset($_POST['logout'])) {
             <h1 class="text-2xl font-bold hidden lg:block">LIBRARY MANAGEMENT SYSTEM</h1>
             <div class="relative">
                 <button id="account-menu-button" class="flex items-center space-x-2 bg-gray-700 rounded-lg px-3 py-2 hover:bg-gray-600 transition">
-                    <img src="./uploaded_file/<?php echo htmlspecialchars($profile_image); ?>" alt="User" class="h-8 w-8 rounded-full bg-white">
+                    <div class="h-8 w-8 rounded-full overflow-hidden flex-shrink-0">
+                        <img src="./uploaded_file/<?php echo htmlspecialchars($profile_image); ?>" alt="User" class="h-full w-full object-cover">
+                    </div>
                     <span class="hidden md:inline">My Account</span>
                     <i class="fas fa-chevron-down text-xs"></i>
                 </button>
